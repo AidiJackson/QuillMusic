@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # Redis for job queue
+  redis:
+    image: redis:7-alpine
+    container_name: quillmusic-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # FastAPI backend
+  api:
+    build:
+      context: ./quillmusic/backend
+      dockerfile: Dockerfile
+    container_name: quillmusic-api
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - DEBUG=true
+      - APP_NAME=QuillMusic
+      - API_PREFIX=/api
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./quillmusic/backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # RQ Worker (for background jobs)
+  # Uncomment when ready to use workers
+  # worker:
+  #   build:
+  #     context: ./quillmusic/backend
+  #     dockerfile: Dockerfile
+  #   container_name: quillmusic-worker
+  #   environment:
+  #     - REDIS_URL=redis://redis:6379/0
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #   volumes:
+  #     - ./quillmusic/backend:/app
+  #   command: python -m app.workers.worker
+
+volumes:
+  redis_data:
+
+networks:
+  default:
+    name: quillmusic-network

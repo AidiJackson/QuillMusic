@@ -1,0 +1,18 @@
+# FastAPI and ASGI server
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Pydantic for data validation
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Redis and job queue
+redis==5.0.1
+rq==1.15.1
+
+# Testing
+pytest==7.4.3
+httpx==0.25.2
+
+# Python utilities
+python-dotenv==1.0.0
