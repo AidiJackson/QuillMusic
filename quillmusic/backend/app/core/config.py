@@ -22,8 +22,11 @@ class Settings(BaseSettings):
     # CORS
     CORS_ORIGINS: list[str] = [
         "http://localhost:5173",
+        "http://localhost:5000",
         "http://localhost:3000",
         "http://localhost:8000",
+        "https://*.replit.dev",
+        "https://*.repl.co",
     ]
 
     model_config = SettingsConfigDict(
