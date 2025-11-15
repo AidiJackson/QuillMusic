@@ -54,11 +54,13 @@ The frontend provides three main interfaces:
 - **Blueprint Display**: Shows generated song structure, sections, and lyrics
 - **Render Controls**: Buttons to trigger render jobs
 
-#### Manual Creator (Future)
-- **DAW Interface**: Timeline-based editor for tracks
-- **Piano Roll**: MIDI editing for melodies and harmonies
-- **Mixer**: Volume, panning, effects per track
-- **Automation**: Parameter changes over time
+#### Manual Creator
+- **Project Management**: Create and manage manual music projects
+- **Track Grid**: Timeline-based pattern arrangement (16 bars)
+- **Pattern Editor**: Grid-based note editor with pitch/step layout
+- **Track Types**: Drums, Bass, Chords, Lead, FX, Vocal
+- **Data Persistence**: SQLite database for projects, tracks, patterns, notes
+- **Note**: Audio rendering to be added in future phase
 
 #### Render Queue
 - **Job Tracking**: Monitor status of render jobs
@@ -230,19 +232,49 @@ Located in `app/workers/worker.py`, workers pull jobs from Redis queues and proc
 - Compression and limiting
 - Reference matching (optional)
 
-### 5. Manual Creator / DAW (Future Phase)
+### 5. Manual Creator (DAW Lite)
 
-**Architecture:**
-- Web Audio API for playback and processing
-- WebAssembly for DSP-heavy operations
-- Server-side rendering for final exports
+The Manual Creator provides a pattern-based music creation interface inspired by PlayStation's Music 2000.
 
-**Features:**
-- Multi-track timeline
-- Piano roll MIDI editor
-- Mixer with per-track effects
-- Automation lanes
-- AI suggestions integrated inline
+**Current Implementation (Phase 2):**
+
+**Data Model:**
+- `ManualProject`: Contains tempo, key, time signature
+- `Track`: Represents an instrument channel with volume, pan, mute, solo
+- `Pattern`: A musical pattern at a specific bar position with a defined length
+- `Note`: Individual notes with step index, pitch (MIDI), and velocity
+
+**Backend API (`/api/manual/`):**
+- `POST /manual/projects` - Create new project
+- `GET /manual/projects` - List all projects
+- `GET /manual/projects/{id}` - Get project detail with all tracks/patterns/notes
+- `DELETE /manual/projects/{id}` - Delete project (cascade)
+- `POST /manual/projects/{id}/tracks` - Add track
+- `PATCH /manual/tracks/{id}` - Update track properties
+- `POST /manual/tracks/{id}/patterns` - Create pattern
+- `PATCH /manual/patterns/{id}` - Update pattern
+- `POST /manual/patterns/{id}/notes/bulk` - Replace all notes in pattern
+- `GET /manual/patterns/{id}/notes` - Get pattern notes
+
+**Database:**
+- SQLite with SQLAlchemy ORM
+- Cascade deletion for hierarchical data
+- Proper foreign key relationships
+
+**Frontend Components:**
+- **Project Selector**: Dropdown to choose or create projects
+- **Track Grid**: 16-bar timeline grid with color-coded instruments
+- **Pattern Creation**: Click cells to create/select patterns
+- **Note Editor**: Grid-based MIDI note editor (7 pitches × 16 steps)
+- **Pattern Highlighting**: Visual feedback for selected patterns
+
+**Future Enhancements (Phase 6):**
+- Web Audio API integration for playback
+- Actual audio rendering from manual projects
+- Mixer controls with visual feedback
+- Waveform display
+- Drag-and-drop pattern arrangement
+- AI-assisted pattern generation
 
 ## Data Flow
 

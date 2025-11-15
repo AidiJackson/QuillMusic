@@ -6,6 +6,9 @@ uvicorn[standard]==0.24.0
 pydantic==2.5.0
 pydantic-settings==2.1.0
 
+# Database
+sqlalchemy==2.0.23
+
 # Redis and job queue
 redis==5.0.1
 rq==1.15.1
