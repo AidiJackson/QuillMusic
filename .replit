@@ -1,4 +1,5 @@
 modules = ["nodejs-20", "web", "python-3.11"]
+
 [agent]
 expertMode = true
 
@@ -48,15 +49,15 @@ outputType = "webview"
 
 [[ports]]
 localPort = 5000
-externalPort = 5000
-
-[[ports]]
-localPort = 6379
 externalPort = 80
 
 [[ports]]
 localPort = 8000
 externalPort = 8000
+
+[[ports]]
+localPort = 43183
+externalPort = 3000
 
 [deployment]
 deploymentTarget = "vm"
