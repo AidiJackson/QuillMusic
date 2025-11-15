@@ -190,3 +190,64 @@ export interface InstrumentalRenderStatus {
   created_at: string
   updated_at: string
 }
+// ========== HitMaker Types ==========
+
+export interface SectionEnergy {
+  name: string
+  position_index: number
+  energy: number
+  tension: number
+  hook_density: number
+  notes?: string | null
+}
+
+export interface SongDNA {
+  blueprint_id?: string | null
+  manual_project_id?: string | null
+  sections: SectionEnergy[]
+  global_energy_curve: number[]
+  global_tension_curve: number[]
+  dominant_mood: string
+  genre_guess: string
+  structure_notes: string[]
+}
+
+export interface HitScoreBreakdown {
+  overall: number
+  hook_strength: number
+  structure: number
+  lyrics_emotion: number
+  genre_fit: number
+  originality: number
+  replay_value: number
+}
+
+export interface HitMakerAnalysis {
+  dna: SongDNA
+  score: HitScoreBreakdown
+  commentary: string[]
+  risks: string[]
+  opportunities: string[]
+}
+
+export interface InfluenceDescriptor {
+  name: string
+  weight: number
+}
+
+export interface HitMakerInfluenceRequest {
+  source_blueprint_id?: string | null
+  source_manual_project_id?: string | null
+  influences: InfluenceDescriptor[]
+  target_mood?: string | null
+  target_genre?: string | null
+}
+
+export interface HitMakerInfluenceResponse {
+  adjusted_dna: SongDNA
+  hook_suggestions: string[]
+  chorus_rewrite_ideas: string[]
+  structure_suggestions: string[]
+  instrumentation_ideas: string[]
+  vocal_style_notes: string[]
+}
