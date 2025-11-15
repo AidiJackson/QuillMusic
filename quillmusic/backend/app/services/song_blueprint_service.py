@@ -2,11 +2,14 @@
 Song Blueprint Generation Service
 
 This module contains engines for generating song blueprints.
-Currently implements a fake/mock engine for development and testing.
+Supports both fake/mock engines for development and LLM-powered engines.
 """
 import hashlib
 import uuid
+import json
+import logging
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from app.schemas.song import (
     SongBlueprintRequest,
@@ -15,6 +18,9 @@ from app.schemas.song import (
     VocalStyleSchema,
     SectionType,
 )
+from app.services.llm_client import LLMClient
+
+logger = logging.getLogger(__name__)
 
 
 class SongBlueprintEngine(ABC):
@@ -362,10 +368,222 @@ Rearrange, rearrange"""
 - Master with {genre}-appropriate compression and EQ"""
 
 
-# Global singleton instance
+class LLMSongBlueprintEngine(SongBlueprintEngine):
+    """
+    LLM-powered song blueprint engine.
+
+    Uses a Large Language Model to generate creative, coherent song structures
+    and lyrics based on user input. Falls back to FakeSongBlueprintEngine if
+    LLM calls fail.
+    """
+
+    def __init__(
+        self,
+        llm_client: LLMClient,
+        fallback_engine: Optional[SongBlueprintEngine] = None,
+    ):
+        """
+        Initialize the LLM song blueprint engine.
+
+        Args:
+            llm_client: The LLM client to use for generation
+            fallback_engine: Optional fallback engine if LLM fails (defaults to FakeSongBlueprintEngine)
+        """
+        self.llm_client = llm_client
+        self.fallback_engine = fallback_engine or FakeSongBlueprintEngine()
+
+    def generate_blueprint(
+        self, req: SongBlueprintRequest
+    ) -> SongBlueprintResponse:
+        """Generate a song blueprint using an LLM."""
+        try:
+            logger.info(
+                f"Generating LLM-powered blueprint: genre={req.genre}, mood={req.mood}"
+            )
+
+            # Construct the prompt for the LLM
+            prompt = self._build_llm_prompt(req)
+            system_prompt = self._build_system_prompt()
+
+            # Call LLM
+            response_json = self.llm_client.generate_json(
+                prompt=prompt,
+                system_prompt=system_prompt,
+                temperature=0.8,
+                max_tokens=3000,
+            )
+
+            # Parse and validate the response
+            blueprint = self._parse_llm_response(response_json, req)
+
+            logger.info(
+                f"Successfully generated LLM blueprint: song_id={blueprint.song_id}"
+            )
+
+            return blueprint
+
+        except Exception as e:
+            logger.warning(
+                f"LLM blueprint generation failed, falling back to fake engine: {e}"
+            )
+            # Fall back to the fake engine
+            return self.fallback_engine.generate_blueprint(req)
+
+    def _build_system_prompt(self) -> str:
+        """Build the system prompt for the LLM."""
+        return """You are an expert music producer and songwriter. Your task is to generate detailed song blueprints including structure, lyrics, and production notes.
+
+You must respond with ONLY valid JSON matching this exact schema:
+
+{
+  "title": "string (creative song title)",
+  "sections": [
+    {
+      "id": "string (e.g., 'sec_intro', 'sec_verse1')",
+      "type": "string (one of: intro, verse, pre_chorus, chorus, bridge, drop, outro, mix_segment)",
+      "name": "string (e.g., 'Verse 1', 'Chorus')",
+      "bars": number (typically 4, 8, or 16),
+      "mood": "string",
+      "description": "string (detailed description of this section)",
+      "instruments": ["array", "of", "strings"]
+    }
+  ],
+  "lyrics": {
+    "sec_id": "lyrics for that section as a multi-line string"
+  },
+  "vocal_style": {
+    "gender": "string (male/female/mixed/auto)",
+    "tone": "string (e.g., 'smooth', 'raspy', 'powerful')",
+    "energy": "string (low/medium/high)",
+    "accent": "string or null"
+  },
+  "notes": "string (production notes and recommendations)"
+}
+
+Make the song structure logical and musically sound. Lyrics should be creative, coherent, and match the mood/genre. Include realistic instrument choices for each section."""
+
+    def _build_llm_prompt(self, req: SongBlueprintRequest) -> str:
+        """Build the user prompt for the LLM."""
+        prompt_parts = [
+            f"Generate a complete song blueprint with the following specifications:",
+            f"",
+            f"Genre: {req.genre}",
+            f"Mood: {req.mood}",
+            f"User Description: {req.prompt}",
+        ]
+
+        if req.bpm:
+            prompt_parts.append(f"Target BPM: {req.bpm}")
+        if req.key:
+            prompt_parts.append(f"Musical Key: {req.key}")
+        if req.duration_seconds:
+            prompt_parts.append(
+                f"Target Duration: approximately {req.duration_seconds} seconds"
+            )
+        if req.reference_text:
+            prompt_parts.append(f"Additional Reference: {req.reference_text}")
+
+        prompt_parts.extend(
+            [
+                "",
+                "Requirements:",
+                "- Create a complete song structure with intro, verses, chorus, bridge, and outro",
+                "- Generate creative, meaningful lyrics for each section (except instrumental parts)",
+                "- Choose appropriate instruments for the genre",
+                "- Ensure the song has good flow and dynamics",
+                "- Respond with ONLY the JSON, no additional text",
+            ]
+        )
+
+        return "\n".join(prompt_parts)
+
+    def _parse_llm_response(
+        self, response_json: dict, req: SongBlueprintRequest
+    ) -> SongBlueprintResponse:
+        """
+        Parse and validate the LLM's JSON response.
+
+        Args:
+            response_json: The JSON response from the LLM
+            req: The original request (for fallback values)
+
+        Returns:
+            A validated SongBlueprintResponse
+
+        Raises:
+            ValueError: If response is invalid and cannot be fixed
+        """
+        # Generate song_id
+        song_id = f"song_{hashlib.md5(req.prompt.encode()).hexdigest()[:8]}_{uuid.uuid4().hex[:8]}"
+
+        # Extract and validate title
+        title = response_json.get("title", "Untitled Song")
+
+        # Parse sections
+        sections_data = response_json.get("sections", [])
+        if not sections_data:
+            raise ValueError("No sections in LLM response")
+
+        sections = []
+        for sec in sections_data:
+            sections.append(
+                SectionSchema(
+                    id=sec.get("id", f"sec_{len(sections)}"),
+                    type=sec.get("type", "verse"),
+                    name=sec.get("name", f"Section {len(sections) + 1}"),
+                    bars=sec.get("bars", 8),
+                    mood=sec.get("mood", req.mood),
+                    description=sec.get("description", ""),
+                    instruments=sec.get("instruments", []),
+                )
+            )
+
+        # Parse lyrics
+        lyrics = response_json.get("lyrics", {})
+        # Ensure all sections have lyrics
+        for section in sections:
+            if section.id not in lyrics:
+                if section.type in ["intro", "outro", "drop"]:
+                    lyrics[section.id] = "[Instrumental]"
+                else:
+                    lyrics[section.id] = "[To be written]"
+
+        # Parse vocal style
+        vocal_data = response_json.get("vocal_style", {})
+        vocal_style = VocalStyleSchema(
+            gender=vocal_data.get("gender", "auto"),
+            tone=vocal_data.get("tone", "neutral"),
+            energy=vocal_data.get("energy", "medium"),
+            accent=vocal_data.get("accent"),
+        )
+
+        # Set defaults from request or use sensible defaults
+        bpm = req.bpm or 120
+        key = req.key or "C"
+
+        return SongBlueprintResponse(
+            song_id=song_id,
+            title=title,
+            genre=req.genre,
+            mood=req.mood,
+            bpm=bpm,
+            key=key,
+            sections=sections,
+            lyrics=lyrics,
+            vocal_style=vocal_style,
+            notes=response_json.get("notes"),
+        )
+
+
+# Global singleton instance (default to fake for backward compatibility)
 _blueprint_engine: SongBlueprintEngine = FakeSongBlueprintEngine()
 
 
 def get_blueprint_engine() -> SongBlueprintEngine:
-    """Get the song blueprint engine (currently fake, can be swapped later)."""
+    """
+    Get the song blueprint engine.
+
+    This function returns the globally configured blueprint engine.
+    Use get_configured_blueprint_engine() for dependency injection.
+    """
     return _blueprint_engine

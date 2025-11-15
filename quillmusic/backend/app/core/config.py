@@ -1,7 +1,7 @@
 """
 QuillMusic Backend Configuration
 """
-from typing import Optional
+from typing import Optional, Literal
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,10 +26,20 @@ class Settings(BaseSettings):
         "http://localhost:8000",
     ]
 
+    # Song Blueprint Engine Configuration
+    SONG_ENGINE_MODE: Literal["fake", "llm"] = "fake"
+
+    # LLM Configuration (for song blueprint generation)
+    LLM_API_BASE: Optional[str] = None
+    LLM_API_KEY: Optional[str] = None
+    LLM_MODEL_NAME: str = "gpt-4.1-mini"
+    LLM_PROVIDER: str = "openai-compatible"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
+        env_prefix="QUILLMUSIC_",
     )
 
 
