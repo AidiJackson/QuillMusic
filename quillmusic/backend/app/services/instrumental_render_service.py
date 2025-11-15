@@ -13,7 +13,12 @@ from app.schemas.manual import ManualProject
 from app.models.instrumental import InstrumentalJobModel
 from app.models.blueprint import SongBlueprintModel
 from app.models.manual import ManualProjectModel
-from app.services.instrumental_engine import get_instrumental_engine
+from app.services.instrumental_engine import (
+    get_instrumental_engine,
+    ConfigurationError,
+    ExternalAudioError,
+)
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -68,19 +73,41 @@ def create_instrumental_job(
 
         logger.info(f"Instrumental job {job_id} completed successfully")
 
-    except Exception as e:
-        logger.error(f"Instrumental job {job_id} failed: {str(e)}")
+    except ConfigurationError as exc:
+        logger.error(f"Instrumental job {job_id} configuration error: {str(exc)}")
 
         # Update job to "failed"
         job = db.query(InstrumentalJobModel).filter(InstrumentalJobModel.id == job_id).first()
         if job:
             job.status = "failed"
-            job.error_message = str(e)
+            job.error_message = f"Configuration error: {str(exc)}"
             job.updated_at = datetime.utcnow()
             db.commit()
             db.refresh(job)
 
-        raise
+    except ExternalAudioError as exc:
+        logger.error(f"Instrumental job {job_id} audio provider error: {str(exc)}")
+
+        # Update job to "failed"
+        job = db.query(InstrumentalJobModel).filter(InstrumentalJobModel.id == job_id).first()
+        if job:
+            job.status = "failed"
+            job.error_message = f"Audio provider error: {str(exc)}"
+            job.updated_at = datetime.utcnow()
+            db.commit()
+            db.refresh(job)
+
+    except Exception as exc:
+        logger.error(f"Instrumental job {job_id} unexpected error: {str(exc)}")
+
+        # Update job to "failed"
+        job = db.query(InstrumentalJobModel).filter(InstrumentalJobModel.id == job_id).first()
+        if job:
+            job.status = "failed"
+            job.error_message = f"Unexpected error: {str(exc)}"
+            job.updated_at = datetime.utcnow()
+            db.commit()
+            db.refresh(job)
 
     # Convert to response schema
     return _job_model_to_status(job)
@@ -119,7 +146,7 @@ def _render_instrumental(request: InstrumentalRenderRequest, db: Session) -> tup
     Returns:
         Tuple of (audio_url, duration_seconds)
     """
-    engine = get_instrumental_engine(request.engine_type)
+    engine = get_instrumental_engine(request.engine_type, settings=settings)
 
     if request.source_type == "blueprint":
         # Load blueprint from database

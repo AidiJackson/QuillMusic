@@ -82,36 +82,6 @@ def test_render_instrumental_with_duration_override():
     assert data["duration_seconds"] == 180
 
 
-def test_render_instrumental_with_external_http_engine():
-    """Test rendering with external_http engine (should work via fake internally)."""
-    # Create a blueprint
-    blueprint_response = client.post(
-        "/api/song/blueprint",
-        json={
-            "prompt": "Dark ambient atmospheric track",
-            "genre": "Ambient",
-            "mood": "Dark",
-        },
-    )
-    assert blueprint_response.status_code == 200
-    blueprint_id = blueprint_response.json()["song_id"]
-
-    # Render with external_http engine (delegates to fake for now)
-    render_response = client.post(
-        "/api/instrumental/render",
-        json={
-            "source_type": "blueprint",
-            "source_id": blueprint_id,
-            "engine_type": "external_http",
-        },
-    )
-    assert render_response.status_code == 200
-
-    data = render_response.json()
-    assert data["status"] == "ready"
-    assert data["engine_type"] == "external_http"
-
-
 def test_render_instrumental_invalid_blueprint():
     """Test rendering with non-existent blueprint ID."""
     render_response = client.post(
@@ -122,8 +92,11 @@ def test_render_instrumental_invalid_blueprint():
             "engine_type": "fake",
         },
     )
-    assert render_response.status_code == 404
-    assert "not found" in render_response.json()["detail"].lower()
+    # Should return 200 with failed status instead of 404
+    assert render_response.status_code == 200
+    data = render_response.json()
+    assert data["status"] == "failed"
+    assert "not found" in data["error_message"].lower()
 
 
 def test_get_instrumental_job_status():

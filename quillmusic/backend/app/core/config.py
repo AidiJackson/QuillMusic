@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     LLM_MODEL_NAME: str = "gpt-4.1-mini"
     LLM_PROVIDER: str = "openai-compatible"
 
+    # Audio Provider Configuration (for instrumental rendering)
+    AUDIO_PROVIDER: Optional[str] = "fake"
+    AUDIO_API_BASE_URL: Optional[str] = None
+    AUDIO_API_KEY: Optional[str] = None
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

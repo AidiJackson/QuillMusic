@@ -257,15 +257,31 @@ export default function InstrumentalStudio() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="fake">Fake (Demo)</SelectItem>
-                      <SelectItem value="external_http" disabled>
-                        External HTTP (Coming Soon)
+                      <SelectItem value="fake">Fake Demo Engine</SelectItem>
+                      <SelectItem value="external_http">
+                        External Real Audio (API)
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Currently using demo engine. Real AI models coming in future phases.
-                  </p>
+                  {engineType === 'fake' ? (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Demo engine generates fake audio URLs for testing
+                    </p>
+                  ) : (
+                    <div className="mt-2 p-3 bg-purple-900/20 border border-purple-700/50 rounded text-xs">
+                      <div className="flex items-start gap-2">
+                        <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-purple-400" />
+                        <div className="text-purple-200">
+                          <strong className="block mb-1">External Audio Provider</strong>
+                          <p className="text-purple-300/80">
+                            This uses a real audio generation API if configured on the server.
+                            Requires AUDIO_PROVIDER, AUDIO_API_BASE_URL, and AUDIO_API_KEY settings.
+                            If not configured, the job will fail with a configuration error.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Duration */}
