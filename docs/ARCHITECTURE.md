@@ -84,6 +84,12 @@ The backend is built on FastAPI and follows a clean, modular architecture.
 - Redis connection strings
 - CORS configuration
 - Debug flags
+- **Song Engine Configuration:**
+  - `SONG_ENGINE_MODE`: `"fake"` (default) or `"llm"`
+  - `LLM_API_KEY`: API key for LLM provider
+  - `LLM_API_BASE`: Optional custom API endpoint
+  - `LLM_MODEL_NAME`: Model to use (e.g., `"gpt-4.1-mini"`)
+  - `LLM_PROVIDER`: Provider type (`"openai-compatible"`)
 
 **Dependencies (`app/core/dependencies.py`):**
 - Redis connection pool
@@ -105,6 +111,9 @@ The backend is built on FastAPI and follows a clean, modular architecture.
 #### Services Layer (`app/services/`)
 
 **Song Blueprint Service:**
+
+The song blueprint service uses a pluggable engine architecture that allows switching between different generation backends:
+
 ```python
 class SongBlueprintEngine(ABC):
     @abstractmethod
@@ -112,7 +121,37 @@ class SongBlueprintEngine(ABC):
         pass
 ```
 
-Currently implemented with `FakeSongBlueprintEngine` that generates deterministic mock data. Future implementations can integrate real LLM models for lyric generation and music theory models for structure.
+**Available Engines:**
+
+1. **FakeSongBlueprintEngine** (Default)
+   - Deterministic mock data generation
+   - No external API calls required
+   - Perfect for development and testing
+   - Always available as fallback
+
+2. **LLMSongBlueprintEngine** (Optional)
+   - Uses Large Language Models (OpenAI, Claude, etc.)
+   - Generates creative, coherent lyrics and song structures
+   - Configurable via environment variables
+   - Automatically falls back to FakeSongBlueprintEngine on errors
+
+**Switching Between Engines:**
+
+The engine is selected automatically based on configuration:
+
+```bash
+# Default: Use fake engine (no API calls)
+QUILLMUSIC_SONG_ENGINE_MODE=fake
+
+# Enable LLM engine
+QUILLMUSIC_SONG_ENGINE_MODE=llm
+QUILLMUSIC_LLM_API_KEY=your-api-key
+QUILLMUSIC_LLM_MODEL_NAME=gpt-4.1-mini
+QUILLMUSIC_LLM_API_BASE=https://api.openai.com/v1  # optional
+QUILLMUSIC_LLM_PROVIDER=openai-compatible
+```
+
+The factory function `get_song_blueprint_engine()` in `app/core/dependencies.py` handles engine selection with proper error handling and fallbacks.
 
 **Render Engine:**
 ```python
