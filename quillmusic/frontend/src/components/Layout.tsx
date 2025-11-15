@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Music, Home, Sparkles, List, Settings, Sliders } from 'lucide-react'
+import { Music, Home, Sparkles, List, Settings, Sliders, Radio } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -7,6 +7,7 @@ const navItems = [
   { path: '/ai-builder', label: 'AI Song Builder', icon: Sparkles },
   { path: '/render-queue', label: 'Render Queue', icon: List },
   { path: '/manual-creator', label: 'Manual Creator', icon: Sliders },
+  { path: '/instrumental-studio', label: 'Instrumental Studio', icon: Radio },
 ]
 
 export default function Layout({ children }: { children: React.ReactNode }) {

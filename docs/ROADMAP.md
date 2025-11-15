@@ -88,7 +88,63 @@ This roadmap outlines the planned development phases for QuillMusic, from the cu
 
 ---
 
-## Phase 3: Real Instrumental Generation
+## Phase 3: Instrumental Engine & Instrumental Studio ✅ **COMPLETED**
+
+**Status**: Complete
+**Duration**: Completed
+**Goal**: Build instrumental rendering abstraction and studio interface
+
+### Deliverables
+
+#### Backend
+- ✅ Instrumental rendering schemas (InstrumentalRenderRequest, InstrumentalRenderStatus)
+- ✅ SQLAlchemy models (InstrumentalJobModel, SongBlueprintModel)
+- ✅ BaseInstrumentalEngine abstract class for pluggable engines
+- ✅ FakeInstrumentalEngine with duration calculation based on musical structure
+- ✅ HttpInstrumentalEngine stub for future external API integration
+- ✅ Instrumental render service with job orchestration
+- ✅ API endpoints: POST /instrumental/render, GET /instrumental/jobs/{id}
+- ✅ Extended song blueprints to persist in database for rendering
+- ✅ Comprehensive test suite (13 new tests, 48 total passing)
+
+#### Frontend
+- ✅ TypeScript types mirroring backend schemas
+- ✅ API client functions for instrumental rendering
+- ✅ Instrumental Studio page with three-column layout
+- ✅ Source selector (AI blueprints vs manual projects)
+- ✅ Render settings (engine type, duration, style hint, quality)
+- ✅ Job status display with color-coded badges
+- ✅ Audio player for rendered instrumentals
+- ✅ Navigation integration with sidebar
+
+#### Features Implemented
+- Render instrumentals from AI song blueprints
+- Render instrumentals from Manual Creator projects
+- Duration auto-calculation based on bars, BPM, time signature
+- Pluggable engine architecture for easy future model integration
+- FakeInstrumentalEngine produces deterministic demo URLs
+- Job status tracking (queued, processing, ready, failed)
+- Error handling and user feedback
+- Quality selection (draft, standard, high)
+- Optional style hints for future AI guidance
+
+### Success Criteria
+- ✅ All 48 backend tests pass (24 original + 11 manual + 13 instrumental)
+- ✅ Frontend builds without errors
+- ✅ Can render from both blueprints and manual projects
+- ✅ Clean abstraction allows easy real model integration later
+- ✅ Duration calculations based on musical structure (not hardcoded)
+
+### Notes for Future Real Model Integration
+- BaseInstrumentalEngine defines clear interface for real models
+- HttpInstrumentalEngine provides placeholder for external APIs
+- Duration can be overridden or auto-calculated
+- Style hints prepared for future AI model parameters
+- Quality tier system ready for model configuration
+
+---
+
+## Phase 4: Real Instrumental Generation (GPU Models)
 
 **Status**: Planned
 **Duration**: 4-6 weeks
@@ -99,7 +155,7 @@ This roadmap outlines the planned development phases for QuillMusic, from the cu
 #### Model Integration
 - [ ] Research and select instrumental model (Stable Audio 2.0, MusicGen, or custom)
 - [ ] Set up GPU infrastructure (Local or cloud)
-- [ ] Implement model wrapper conforming to `RenderEngine` interface
+- [ ] Implement model wrapper conforming to `BaseInstrumentalEngine` interface
 - [ ] Add model configuration system (temperature, guidance scale, etc.)
 
 #### Backend Updates
@@ -129,7 +185,7 @@ This roadmap outlines the planned development phases for QuillMusic, from the cu
 
 ---
 
-## Phase 4: Vocal Synthesis Integration
+## Phase 5: Vocal Synthesis Integration
 
 **Status**: Planned
 **Duration**: 6-8 weeks
@@ -169,7 +225,7 @@ This roadmap outlines the planned development phases for QuillMusic, from the cu
 
 ---
 
-## Phase 5: Mastering & Polish
+## Phase 6: Mastering & Polish
 
 **Status**: Planned
 **Duration**: 3-4 weeks
@@ -204,7 +260,7 @@ This roadmap outlines the planned development phases for QuillMusic, from the cu
 
 ---
 
-## Phase 6: Manual Creator Audio & Advanced DAW Features
+## Phase 7: Manual Creator Audio & Advanced DAW Features
 
 **Status**: Planned
 **Duration**: 8-12 weeks
@@ -264,7 +320,7 @@ This roadmap outlines the planned development phases for QuillMusic, from the cu
 
 ---
 
-## Phase 7: Commercialization & Scaling
+## Phase 8: Commercialization & Scaling
 
 **Status**: Planned
 **Duration**: 8-12 weeks
@@ -316,7 +372,7 @@ This roadmap outlines the planned development phases for QuillMusic, from the cu
 
 ---
 
-## Phase 8: Advanced Features & Expansion
+## Phase 9: Advanced Features & Expansion
 
 **Status**: Future
 **Duration**: Ongoing
@@ -365,14 +421,14 @@ This roadmap outlines the planned development phases for QuillMusic, from the cu
 
 ```
 Year 1:
-├── Q1: Phase 1-2 (Scaffold + Manual Creator) ✅
-├── Q2: Phase 3 (Instrumental AI)
-├── Q3: Phase 4 (Vocals)
-└── Q4: Phase 5-6 (Mastering + Manual Creator Audio)
+├── Q1: Phase 1-3 (Scaffold + Manual Creator + Instrumental Studio) ✅
+├── Q2: Phase 4 (Real Instrumental AI Models)
+├── Q3: Phase 5 (Vocals)
+└── Q4: Phase 6-7 (Mastering + Manual Creator Audio)
 
 Year 2:
-├── Q1-Q2: Phase 6 continued + Phase 7 (Launch)
-├── Q3-Q4: Phase 8 (Expansion and new features)
+├── Q1-Q2: Phase 7 continued + Phase 8 (Launch)
+├── Q3-Q4: Phase 9 (Expansion and new features)
 └── Ongoing: Maintenance, scaling, growth
 ```
 
@@ -432,7 +488,7 @@ See `CONTRIBUTING.md` for guidelines (to be created).
 
 This roadmap is a living document and will evolve based on user feedback, technological advances, and market conditions. The goal is to build QuillMusic incrementally, ensuring each phase delivers value before moving to the next.
 
-**Completed**: Phase 1-2 (Scaffold + Manual Creator) ✅
-**Current Focus**: Phase 3 - Real Instrumental Generation
+**Completed**: Phase 1-3 (Scaffold + Manual Creator + Instrumental Studio) ✅
+**Current Focus**: Phase 4 - Real Instrumental Generation with GPU Models
 
 Let's build the future of music creation! 🎵

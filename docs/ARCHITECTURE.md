@@ -62,6 +62,15 @@ The frontend provides three main interfaces:
 - **Data Persistence**: SQLite database for projects, tracks, patterns, notes
 - **Note**: Audio rendering to be added in future phase
 
+#### Instrumental Studio
+- **Source Selection**: Choose between AI blueprints or manual projects
+- **Source Browsing**: Live-updated dropdowns showing available sources
+- **Source Summary**: Display key musical parameters (BPM, key, genre, etc.)
+- **Render Settings**: Configure engine type, duration, style hints, quality
+- **Job Status**: Real-time job tracking with color-coded status badges
+- **Audio Playback**: Integrated HTML5 audio player for rendered instrumentals
+- **Dual Input Support**: Renders from both blueprint engine and manual creator
+
 #### Render Queue
 - **Job Tracking**: Monitor status of render jobs
 - **Audio Preview**: Play completed renders
@@ -105,10 +114,30 @@ The backend is built on FastAPI and follows a clean, modular architecture.
 
 **Song Blueprint Endpoints:**
 - `POST /api/song/blueprint` - Generate song structure from prompt
+- `GET /api/song/blueprints` - List all blueprints (with limit)
+- `GET /api/song/blueprints/{id}` - Get specific blueprint
 
-**Render Endpoints:**
+**Instrumental Render Endpoints:**
+- `POST /api/instrumental/render` - Create instrumental render job
+- `GET /api/instrumental/jobs/{job_id}` - Get job status and audio URL
+
+**Render Endpoints (Legacy):**
 - `POST /api/renders` - Create a render job
 - `GET /api/renders/{job_id}` - Get render job status
+
+**Manual Creator Endpoints:**
+- `POST /api/manual/projects` - Create new project
+- `GET /api/manual/projects` - List all projects
+- `GET /api/manual/projects/{id}` - Get project with tracks/patterns/notes
+- `DELETE /api/manual/projects/{id}` - Delete project
+- `POST /api/manual/projects/{id}/tracks` - Add track
+- `PATCH /api/manual/tracks/{id}` - Update track
+- `DELETE /api/manual/tracks/{id}` - Delete track
+- `POST /api/manual/tracks/{id}/patterns` - Create pattern
+- `PATCH /api/manual/patterns/{id}` - Update pattern
+- `DELETE /api/manual/patterns/{id}` - Delete pattern
+- `GET /api/manual/patterns/{id}/notes` - Get pattern notes
+- `POST /api/manual/patterns/{id}/notes/bulk` - Bulk update notes
 
 #### Services Layer (`app/services/`)
 
@@ -155,7 +184,53 @@ QUILLMUSIC_LLM_PROVIDER=openai-compatible
 
 The factory function `get_song_blueprint_engine()` in `app/core/dependencies.py` handles engine selection with proper error handling and fallbacks.
 
-**Render Engine:**
+**Instrumental Render Service:**
+
+The instrumental render service orchestrates the creation of instrumental audio from either AI-generated blueprints or Manual Creator projects. It provides a clean abstraction layer between the API and the rendering engines.
+
+```python
+class BaseInstrumentalEngine(ABC):
+    @abstractmethod
+    def render_from_blueprint(blueprint: SongBlueprintResponse) -> Tuple[str, int]:
+        """Returns (audio_url, duration_seconds)"""
+        pass
+
+    @abstractmethod
+    def render_from_manual_project(project, tracks, patterns) -> Tuple[str, int]:
+        """Returns (audio_url, duration_seconds)"""
+        pass
+```
+
+**Available Engines:**
+
+1. **FakeInstrumentalEngine** (Default)
+   - Calculates duration based on musical structure (bars, BPM, time signature)
+   - Returns deterministic demo URLs
+   - No external dependencies
+   - Perfect for development and testing
+
+2. **HttpInstrumentalEngine** (Future)
+   - Placeholder for external HTTP-based AI services
+   - Currently delegates to FakeInstrumentalEngine
+   - Prepared for integration with Stable Audio, MusicGen, etc.
+
+**Duration Calculation:**
+The engine intelligently calculates audio duration based on musical parameters:
+- For blueprints: `total_bars = sum(section.bars for all sections)`
+- For manual projects: `last_bar = max(pattern.start_bar + pattern.length_bars)`
+- Conversion: `duration_seconds = (bars * 60 / bpm * 4)` for 4/4 time
+- Clamped to 8-600 seconds for safety
+
+**Database Persistence:**
+- `InstrumentalJobModel`: Stores render jobs with status tracking
+- `SongBlueprintModel`: Persists blueprints for reuse in instrumental rendering
+- Supports both "blueprint" and "manual_project" source types
+
+**API Endpoints:**
+- `POST /api/instrumental/render` - Create instrumental render job
+- `GET /api/instrumental/jobs/{job_id}` - Get job status and audio URL
+
+**Render Engine (Legacy):**
 ```python
 class RenderEngine(ABC):
     @abstractmethod
@@ -183,6 +258,19 @@ Currently implemented with `FakeRenderEngine` for development. Production will u
 - `RenderType`: instrumental | vocals | full_mix
 - `RenderStatus`: queued | processing | ready | failed
 
+**Instrumental Rendering:**
+- `InstrumentalRenderRequest`: Render request with source type and settings
+- `InstrumentalRenderStatus`: Job tracking with audio URL and metadata
+- `InstrumentalEngineType`: fake | external_http
+- `InstrumentalSourceType`: blueprint | manual_project
+- `InstrumentalQuality`: draft | standard | high
+
+**Manual Creator:**
+- `ManualProject`: Project metadata (tempo, key, time signature)
+- `Track`: Instrument channels with mixer controls
+- `Pattern`: Musical patterns with bar position and length
+- `Note`: Individual MIDI notes with pitch, step, velocity
+
 ### 3. Job Queue System (Redis + RQ)
 
 **Purpose:**
@@ -199,18 +287,41 @@ Audio rendering is computationally intensive and can take minutes to hours. A jo
 **Workers:**
 Located in `app/workers/worker.py`, workers pull jobs from Redis queues and process them. In production, these would run on GPU-enabled machines.
 
-### 4. Future ML Engines
+### 4. ML Engines
 
-#### Instrumental Engine
-**Models to integrate:**
-- Stable Audio 2.0
-- MusicGen
+#### Instrumental Engine (Implemented)
+
+**Current Status:** Phase 3 Complete - Clean abstraction with fake engine
+
+The instrumental engine is fully implemented with a pluggable architecture ready for real AI models:
+
+**Architecture:**
+- `BaseInstrumentalEngine`: Abstract base class defining the interface
+- `FakeInstrumentalEngine`: Production-ready fake engine with realistic duration calculations
+- `HttpInstrumentalEngine`: Stub for future external API integration
+
+**Supported Input Sources:**
+- AI-generated song blueprints (from LLM or fake engine)
+- Manual Creator projects (user-composed MIDI patterns)
+
+**Current Capabilities:**
+- Duration calculation based on musical structure (bars, BPM, time signature)
+- Deterministic demo URL generation
+- Source type abstraction (blueprint vs manual project)
+- Quality tier support (draft, standard, high)
+- Style hints for future AI guidance
+
+**Future Real Models to Integrate:**
+- Stable Audio 2.0 (Stability AI)
+- MusicGen (Meta)
 - Riffusion XL
+- Custom fine-tuned models
 
-**Responsibilities:**
-- Generate instrumental audio from blueprint
-- Apply genre-specific characteristics
-- Match BPM and key precisely
+**Integration Points:**
+- Implement `BaseInstrumentalEngine` interface
+- Return `(audio_url, duration_seconds)` tuple
+- Handle blueprint and manual project sources
+- Apply genre, BPM, key constraints
 
 #### Vocal Engine
 **Models to integrate:**

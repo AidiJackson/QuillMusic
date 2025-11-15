@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.database import init_db
-from app.api.routes import health, song_blueprints, renders, manual
+from app.api.routes import health, song_blueprints, renders, manual, instrumental
 
 
 def create_app() -> FastAPI:
@@ -36,6 +36,7 @@ def create_app() -> FastAPI:
     )
     app.include_router(renders.router, prefix=settings.API_PREFIX, tags=["renders"])
     app.include_router(manual.router, prefix=settings.API_PREFIX, tags=["manual"])
+    app.include_router(instrumental.router, prefix=settings.API_PREFIX, tags=["instrumental"])
 
     @app.get("/")
     async def root():
