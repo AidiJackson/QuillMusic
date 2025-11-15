@@ -8,7 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
-from app.api.routes import health, song_blueprints, renders
+from app.core.database import init_db
+from app.api.routes import health, song_blueprints, renders, manual
 
 
 def create_app() -> FastAPI:
@@ -29,12 +30,16 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    # Initialize database
+    init_db()
+
     # Include routers
     app.include_router(health.router, prefix=settings.API_PREFIX, tags=["health"])
     app.include_router(
         song_blueprints.router, prefix=settings.API_PREFIX, tags=["songs"]
     )
     app.include_router(renders.router, prefix=settings.API_PREFIX, tags=["renders"])
+    app.include_router(manual.router, prefix=settings.API_PREFIX, tags=["manual"])
 
     # Serve static frontend files in production
     frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"

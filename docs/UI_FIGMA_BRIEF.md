@@ -191,7 +191,7 @@ Colors:
 **Hero Section:**
 - Two large CTA cards in a 2-column grid
 - Left card: "Start AI Song Builder" (Purple gradient)
-- Right card: "Manual Creator - Coming Soon" (Blue gradient, dimmed)
+- Right card: "Open Manual Creator" (Blue gradient)
 
 **Stats Row:**
 - Three cards showing:
@@ -257,26 +257,67 @@ Colors:
 - Clock icon (64px)
 - Text: "No jobs yet..."
 
-### Manual Creator (Coming Soon)
+### Manual Creator
 
-**Hero Card:**
-- Gradient background (Blue)
-- Large title: "Coming Soon: DAW Lite"
-- Description paragraph
-- Tag: "In Development"
+**Layout:** Three-column grid (3-6-3 ratio)
 
-**Feature Cards Grid:**
-- 2x2 grid of cards, each with:
-  - Icon (colored background circle)
-  - Feature title
-  - Short description
+**Left Column - Project Controls (col-span-3):**
+- Card with project selector dropdown
+- Project info display:
+  - Tempo (BPM) with music icon
+  - Key display
+- "Add Track" section with 2×3 grid of instrument type buttons:
+  - Drums (Blue), Bass (Green), Chords (Purple)
+  - Lead (Pink), FX (Yellow), Vocal (Red)
 
-**Mockup Preview:**
-- Large card containing wireframe of DAW interface:
-  - Top toolbar (transport, tempo, etc.)
-  - Left track list (colored track indicators)
-  - Right timeline grid (with mock audio clips)
-  - Bottom mixer section
+**Middle Column - Timeline Grid (col-span-6):**
+- Card with "Timeline Grid" title
+- Description: "Click cells to create/edit patterns"
+- Track rows with:
+  - Track name label (color-coded by instrument type)
+  - 16 bar cells per row
+  - Pattern cells fill multiple bars based on length
+  - Selected pattern has white ring highlight
+  - Empty cells are dark gray with hover state
+  - Pattern cells show pattern name (truncated)
+
+**Right Column - Pattern Editor (col-span-3):**
+- Card with "Pattern Editor" title
+- Pattern info: name, length in bars, start bar
+- Note grid section:
+  - Label: "Note Grid" with "Save" button
+  - Grid with:
+    - Left column: Pitch labels (C, D, E, F, G, A, B - top to bottom)
+    - 16 step columns
+    - Purple cells for active notes
+    - Gray cells for empty steps
+    - Vertical lines every 4 steps for beat markers
+  - Click cells to toggle notes
+
+**Empty State (No Projects):**
+- Centered card with gradient background (Purple to Blue)
+- Title: "No Projects Yet"
+- Description: "Create your first manual project..."
+- Large "Create Project" button
+
+**New Project Dialog:**
+- Modal dialog with dark background
+- Fields:
+  - Project Name (text input)
+  - Tempo BPM (number input, default 120)
+  - Key (text input, e.g., "C", "Am")
+- Cancel and Create buttons
+
+**Color Scheme:**
+- Drums: Blue (#2563eb)
+- Bass: Green (#16a34a)
+- Chords: Purple (#9333ea)
+- Lead: Pink (#db2777)
+- FX: Yellow (#eab308)
+- Vocal: Red (#dc2626)
+- Active Notes: Purple (#9333ea)
+- Background: Dark gray (#111827, #1f2937)
+- Cards: Gray-900 (#0f172a)
 
 ## Animations & Interactions
 

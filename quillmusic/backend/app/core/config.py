@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     # API
     API_PREFIX: str = "/api"
 
+    # Database
+    DATABASE_URL: str = "sqlite:///./quillmusic.db"
+
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
 
