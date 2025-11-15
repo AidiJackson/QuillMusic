@@ -144,7 +144,95 @@ This roadmap outlines the planned development phases for QuillMusic, from the cu
 
 ---
 
-## Phase 4: Real Instrumental Generation (GPU Models)
+## Phase 4: HitMaker Engine & Studio ✅ **COMPLETED**
+
+**Status**: Complete
+**Duration**: Completed
+**Goal**: Build hit potential analysis and influence blending system
+
+### Deliverables
+
+#### Backend
+- ✅ HitMaker analysis schemas (SongDNA, HitScoreBreakdown, HitMakerAnalysis)
+- ✅ Influence blending schemas (InfluenceDescriptor, HitMakerInfluenceRequest/Response)
+- ✅ FakeHitMakerEngine with realistic scoring and suggestion generation
+- ✅ Analysis endpoints: POST /hitmaker/analyze/blueprint, /hitmaker/analyze/manual
+- ✅ Influence endpoints: POST /hitmaker/influence/blueprint, /hitmaker/influence/manual
+- ✅ Comprehensive test suite (63 tests passing)
+
+#### Frontend
+- ✅ HitMaker Studio page with 3-column layout
+- ✅ Source selection panel (Blueprint/Manual toggle)
+- ✅ Analysis display with HIT SCORE, breakdown, energy curves, commentary
+- ✅ Influence Blender with up to 3 artist influences and weight sliders
+- ✅ Suggestions display (hooks, chorus ideas, structure, instrumentation, vocal style)
+- ✅ Dark theme with purple accents matching QuillMusic design
+
+#### Features Implemented
+- Analyze song blueprints and manual projects for hit potential
+- Score breakdown across 7 dimensions (hook strength, structure, lyrics emotion, etc.)
+- Energy and tension curve analysis throughout the song
+- Artistic influence blending with weighted suggestions
+- Optional target mood and genre for influence application
+
+### Success Criteria
+- ✅ All 63 backend tests pass
+- ✅ Frontend builds without errors
+- ✅ Can analyze both blueprints and manual projects
+- ✅ Influence blending produces sensible suggestions
+- ✅ Clean abstraction allows future real AI model integration
+
+---
+
+## Phase 5: External Instrumental Audio Engine (Real Audio MVP) ✅ **COMPLETED**
+
+**Status**: Complete
+**Duration**: Completed
+**Goal**: Enable external HTTP-based audio generation with configuration and error handling
+
+### Deliverables
+
+#### Backend
+- ✅ Configuration system for audio providers (AUDIO_PROVIDER, AUDIO_API_BASE_URL, AUDIO_API_KEY)
+- ✅ ExternalInstrumentalEngine class with HTTP integration
+- ✅ Prompt generation from blueprints and manual projects
+- ✅ Error handling (ConfigurationError, ExternalAudioError)
+- ✅ Engine factory with settings validation
+- ✅ Updated render service with specific error handling
+- ✅ Comprehensive test suite with mocked HTTP calls
+
+#### Frontend
+- ✅ Engine selector in Instrumental Studio (Fake Demo vs External Real Audio)
+- ✅ Conditional info display explaining external provider requirements
+- ✅ Error message display for failed jobs
+- ✅ Types already support error_message field
+
+#### Features Implemented
+- Fully optional external audio provider via environment variables
+- Provider-agnostic HTTP API integration
+- Text prompt generation from musical structure
+- HTTP request with authentication to external API
+- Configuration validation with clear error messages
+- All errors propagate to job status for user visibility
+- No real HTTP calls in tests (fully mocked)
+
+### Success Criteria
+- ✅ All tests pass (including new external engine tests)
+- ✅ Frontend builds without errors
+- ✅ Can select external engine in UI
+- ✅ Configuration errors handled gracefully
+- ✅ HTTP failures handled gracefully
+- ✅ FakeInstrumentalEngine remains fully functional
+
+### Notes
+- Ready for integration with Stable Audio, MusicGen, or any compatible API
+- API contract defined for external providers
+- Environment configuration prevents accidental API calls
+- Clear user feedback when configuration missing
+
+---
+
+## Phase 6: Real Instrumental Generation (GPU Models)
 
 **Status**: Planned
 **Duration**: 4-6 weeks
@@ -185,7 +273,7 @@ This roadmap outlines the planned development phases for QuillMusic, from the cu
 
 ---
 
-## Phase 5: Vocal Synthesis Integration
+## Phase 7: Vocal Synthesis Integration
 
 **Status**: Planned
 **Duration**: 6-8 weeks
@@ -225,7 +313,7 @@ This roadmap outlines the planned development phases for QuillMusic, from the cu
 
 ---
 
-## Phase 6: Mastering & Polish
+## Phase 8: Mastering & Polish
 
 **Status**: Planned
 **Duration**: 3-4 weeks
@@ -260,7 +348,7 @@ This roadmap outlines the planned development phases for QuillMusic, from the cu
 
 ---
 
-## Phase 7: Manual Creator Audio & Advanced DAW Features
+## Phase 9: Manual Creator Audio & Advanced DAW Features
 
 **Status**: Planned
 **Duration**: 8-12 weeks
@@ -320,7 +408,7 @@ This roadmap outlines the planned development phases for QuillMusic, from the cu
 
 ---
 
-## Phase 8: Commercialization & Scaling
+## Phase 10: Commercialization & Scaling
 
 **Status**: Planned
 **Duration**: 8-12 weeks
@@ -372,7 +460,7 @@ This roadmap outlines the planned development phases for QuillMusic, from the cu
 
 ---
 
-## Phase 9: Advanced Features & Expansion
+## Phase 11: Advanced Features & Expansion
 
 **Status**: Future
 **Duration**: Ongoing
@@ -421,14 +509,14 @@ This roadmap outlines the planned development phases for QuillMusic, from the cu
 
 ```
 Year 1:
-├── Q1: Phase 1-3 (Scaffold + Manual Creator + Instrumental Studio) ✅
-├── Q2: Phase 4 (Real Instrumental AI Models)
-├── Q3: Phase 5 (Vocals)
-└── Q4: Phase 6-7 (Mastering + Manual Creator Audio)
+├── Q1: Phase 1-5 (Scaffold + Manual Creator + Instrumental Studio + HitMaker + External Audio) ✅
+├── Q2: Phase 6 (Real Instrumental GPU Models)
+├── Q3: Phase 7 (Vocals)
+└── Q4: Phase 8-9 (Mastering + Manual Creator Audio)
 
 Year 2:
-├── Q1-Q2: Phase 7 continued + Phase 8 (Launch)
-├── Q3-Q4: Phase 9 (Expansion and new features)
+├── Q1-Q2: Phase 9 continued + Phase 10 (Launch)
+├── Q3-Q4: Phase 11 (Expansion and new features)
 └── Ongoing: Maintenance, scaling, growth
 ```
 
@@ -488,7 +576,13 @@ See `CONTRIBUTING.md` for guidelines (to be created).
 
 This roadmap is a living document and will evolve based on user feedback, technological advances, and market conditions. The goal is to build QuillMusic incrementally, ensuring each phase delivers value before moving to the next.
 
-**Completed**: Phase 1-3 (Scaffold + Manual Creator + Instrumental Studio) ✅
-**Current Focus**: Phase 4 - Real Instrumental Generation with GPU Models
+**Completed**: Phase 1-5 ✅
+- Phase 1: Scaffold & Foundation
+- Phase 2: Manual Creator (Music 2000 Remaster)
+- Phase 3: Instrumental Engine & Instrumental Studio
+- Phase 4: HitMaker Engine & Studio
+- Phase 5: External Instrumental Audio Engine (Real Audio MVP)
+
+**Current Focus**: Phase 6 - Real Instrumental Generation with GPU Models
 
 Let's build the future of music creation! 🎵

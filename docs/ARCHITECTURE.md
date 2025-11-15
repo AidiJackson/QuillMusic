@@ -209,10 +209,23 @@ class BaseInstrumentalEngine(ABC):
    - No external dependencies
    - Perfect for development and testing
 
-2. **HttpInstrumentalEngine** (Future)
-   - Placeholder for external HTTP-based AI services
+2. **ExternalInstrumentalEngine** (Phase 5 - Production Ready)
+   - Makes HTTP requests to external audio generation APIs
+   - Converts blueprints/projects to text prompts
+   - Supports any provider following the API contract
+   - Configuration via environment variables:
+     - `AUDIO_PROVIDER`: Set to "stable_audio_http"
+     - `AUDIO_API_BASE_URL`: API endpoint base URL
+     - `AUDIO_API_KEY`: Authentication API key
+   - Error handling:
+     - `ConfigurationError`: Missing or invalid settings
+     - `ExternalAudioError`: HTTP failures or invalid responses
+   - All errors propagate to job.error_message for user visibility
+
+3. **HttpInstrumentalEngine** (Legacy Placeholder)
+   - Original placeholder implementation
    - Currently delegates to FakeInstrumentalEngine
-   - Prepared for integration with Stable Audio, MusicGen, etc.
+   - Kept for backwards compatibility
 
 **Duration Calculation:**
 The engine intelligently calculates audio duration based on musical parameters:

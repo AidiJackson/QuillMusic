@@ -216,7 +216,82 @@ To integrate any of the above instrumental models (Stable Audio 2.0, MusicGen, e
 
 **No other code changes needed** - the entire stack (API routes, frontend, database) is ready.
 
-**Next Steps for Phase 4:**
+---
+
+### Phase 5: External Instrumental Provider (Real Audio MVP) ✅ **COMPLETE**
+
+**What We Built:**
+- `ExternalInstrumentalEngine` class for HTTP-based audio generation
+- Configuration system for external audio providers
+- Error handling for configuration and API failures
+- Comprehensive test suite with mocked HTTP calls
+- Frontend UI with engine selection
+
+**External Audio Provider Support:**
+
+QuillMusic now supports external audio generation APIs through a configurable HTTP engine:
+
+**Configuration (Backend .env):**
+```bash
+QUILLMUSIC_AUDIO_PROVIDER=stable_audio_http  # or "fake" for demo
+QUILLMUSIC_AUDIO_API_BASE_URL=https://api.your-provider.com
+QUILLMUSIC_AUDIO_API_KEY=sk-your-api-key
+```
+
+**How It Works:**
+1. User selects "External Real Audio (API)" engine in Instrumental Studio
+2. Backend validates configuration when creating engine instance
+3. External engine converts blueprint/manual project to text prompt
+4. HTTP POST request sent to external API with prompt and duration
+5. API returns audio URL which is stored in the job
+6. If configuration is missing or API fails, job status = "failed" with clear error message
+
+**Prompt Generation:**
+- **From Blueprint**: Combines genre, mood, BPM, key, and section structure into descriptive prompt
+- **From Manual Project**: Combines tempo, key, instrument types, and pattern count into prompt
+
+**Error Handling:**
+- `ConfigurationError`: Missing or invalid AUDIO_PROVIDER, AUDIO_API_BASE_URL, or AUDIO_API_KEY
+- `ExternalAudioError`: HTTP errors, invalid responses, or network failures
+- All errors propagate to job.error_message for user visibility
+
+**Test Coverage:**
+- Configuration validation tests (missing provider, base URL, API key)
+- Successful rendering from blueprint and manual project
+- HTTP error handling (500 responses, invalid JSON, network exceptions)
+- All tests use mocked httpx.post - no real HTTP calls
+
+**API Contract:**
+```python
+# Request
+POST {base_url}/v2/generate/audio
+Headers:
+  Authorization: Bearer {api_key}
+  Content-Type: application/json
+Body:
+  {
+    "model": "music-gen-v1",
+    "prompt": "Instrumental music: EDM genre, Energetic mood, 128 BPM, in Am, with sections: Intro, Buildup, Drop, Breakdown, Drop, Outro",
+    "seconds_total": 120
+  }
+
+# Expected Response
+{
+  "id": "job-123",
+  "status": "ready",
+  "audio_url": "https://cdn.example.com/audio/job-123.mp3"
+}
+```
+
+**Integration Options:**
+
+This implementation is **provider-agnostic** and can work with:
+- Stable Audio API (when available)
+- MusicGen API endpoints
+- Custom self-hosted models
+- Any HTTP API following the contract above
+
+**Next Steps for Real Model Integration:**
 
 When ready to integrate real models, we recommend this order:
 

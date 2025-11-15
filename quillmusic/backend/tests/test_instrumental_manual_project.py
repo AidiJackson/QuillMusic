@@ -176,8 +176,11 @@ def test_render_instrumental_invalid_manual_project():
             "engine_type": "fake",
         },
     )
-    assert render_response.status_code == 404
-    assert "not found" in render_response.json()["detail"].lower()
+    # Should return 200 with failed status instead of 404
+    assert render_response.status_code == 200
+    data = render_response.json()
+    assert data["status"] == "failed"
+    assert "not found" in data["error_message"].lower()
 
 
 def test_render_instrumental_with_style_hint():
