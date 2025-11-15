@@ -161,3 +161,32 @@ export interface ManualProjectDetail {
   patterns: Pattern[]
   notes: Note[]
 }
+
+// ========== Instrumental Rendering Types ==========
+
+export type InstrumentalEngineType = "fake" | "external_http"
+export type InstrumentalSourceType = "blueprint" | "manual_project"
+export type InstrumentalStatus = "queued" | "processing" | "ready" | "failed"
+export type InstrumentalQuality = "draft" | "standard" | "high"
+
+export interface InstrumentalRenderRequest {
+  source_type: InstrumentalSourceType
+  source_id: string
+  engine_type?: InstrumentalEngineType
+  duration_seconds?: number | null
+  style_hint?: string | null
+  quality?: InstrumentalQuality | null
+}
+
+export interface InstrumentalRenderStatus {
+  id: string
+  status: InstrumentalStatus
+  engine_type: InstrumentalEngineType
+  source_type: InstrumentalSourceType
+  source_id: string
+  duration_seconds?: number | null
+  audio_url?: string | null
+  error_message?: string | null
+  created_at: string
+  updated_at: string
+}

@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import AISongBuilder from './pages/AISongBuilder'
 import RenderQueue from './pages/RenderQueue'
 import ManualCreator from './pages/ManualCreator'
+import InstrumentalStudio from './pages/InstrumentalStudio'
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="/ai-builder" element={<AISongBuilder />} />
           <Route path="/render-queue" element={<RenderQueue />} />
           <Route path="/manual-creator" element={<ManualCreator />} />
+          <Route path="/instrumental-studio" element={<InstrumentalStudio />} />
         </Routes>
       </Layout>
       <Toaster />
