@@ -302,6 +302,52 @@ const hitmakerApi = {
 }
 
 /**
+ * Vocals API (ElevenLabs TTS integration)
+ */
+const vocalsApi = {
+  /**
+   * Generate a vocal preview using ElevenLabs TTS
+   * Returns audio blob (MP3 format)
+   */
+  async preview(params: {
+    text: string
+    voiceId: string
+    modelId?: string
+  }): Promise<Blob> {
+    const url = `${API_BASE}/vocals/preview`
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text: params.text,
+        voice_id: params.voiceId,
+        model_id: params.modelId,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '')
+      let errorMessage = `Failed to generate vocal preview (${response.status})`
+
+      try {
+        const errorJson = JSON.parse(errorText)
+        errorMessage = errorJson.detail || errorMessage
+      } catch {
+        errorMessage = errorText || errorMessage
+      }
+
+      throw new Error(errorMessage)
+    }
+
+    // Return audio blob
+    return await response.blob()
+  },
+}
+
+/**
  * Config & Feature Flags API
  */
 const configApi = {
@@ -360,6 +406,7 @@ export const apiClient = {
   },
   instrumental: instrumentalApi,
   hitmaker: hitmakerApi,
+  vocals: vocalsApi,
   config: configApi,
 }
 
