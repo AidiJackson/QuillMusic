@@ -19,10 +19,6 @@ QUILLMUSIC_DEBUG = "true"
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 42981
-externalPort = 3000
-
 # -----------------------------
 # Deployment (for later – you can ignore this for now)
 # -----------------------------
