@@ -2,8 +2,9 @@
 QuillMusic Backend Configuration
 """
 from typing import Optional, Literal
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
 
 
 class InstrumentalEngineConfig(BaseModel):
@@ -82,12 +83,27 @@ class Settings(BaseSettings):
     ELEVENLABS_DEFAULT_MODEL: str = "eleven_turbo_v2_5"
     ELEVENLABS_DEFAULT_VOICE_ID: Optional[str] = None
 
+    # Replicate Configuration (hosted MusicGen)
+    REPLICATE_API_TOKEN: Optional[str] = None
+    REPLICATE_BASE_URL: str = "https://api.replicate.com"
+    REPLICATE_MUSICGEN_VERSION: Optional[str] = None
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
         env_prefix="QUILLMUSIC_",
+        # Allow fallback to REPLICATE_API_TOKEN if QUILLMUSIC_REPLICATE_API_TOKEN is not set
+        extra="ignore",
     )
+
+    @field_validator('REPLICATE_API_TOKEN', mode='before')
+    @classmethod
+    def fallback_replicate_token(cls, v):
+        """Fallback to REPLICATE_API_TOKEN if QUILLMUSIC_REPLICATE_API_TOKEN is not set."""
+        if v is None:
+            return os.getenv('REPLICATE_API_TOKEN')
+        return v
 
     @property
     def instrumental_engines(self) -> list[InstrumentalEngineConfig]:
@@ -137,6 +153,17 @@ class Settings(BaseSettings):
                 base_url=self.MUSICGEN_BASE_URL,
                 api_key=self.MUSICGEN_API_KEY,
                 model=self.MUSICGEN_MODEL,
+            ))
+
+        # Add Replicate MusicGen if configured
+        if self.REPLICATE_API_TOKEN and self.REPLICATE_MUSICGEN_VERSION:
+            engines.append(InstrumentalEngineConfig(
+                name="replicate_musicgen",
+                label="Replicate MusicGen (Cloud)",
+                engine_type="replicate_musicgen",
+                base_url=self.REPLICATE_BASE_URL,
+                api_key=self.REPLICATE_API_TOKEN,
+                model=self.REPLICATE_MUSICGEN_VERSION,
             ))
 
         # Filter by INSTRUMENTAL_ENGINES if specified

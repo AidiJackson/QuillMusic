@@ -308,6 +308,20 @@ export default function InstrumentalStudio() {
                         </div>
                       </div>
                     </div>
+                  ) : selectedEngineName === 'replicate_musicgen' ? (
+                    <div className="mt-2 p-3 bg-blue-900/20 border border-blue-700/50 rounded text-xs">
+                      <div className="flex items-start gap-2">
+                        <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-400" />
+                        <div className="text-blue-200">
+                          <strong className="block mb-1">Replicate MusicGen (Hosted Cloud)</strong>
+                          <p className="text-blue-300/80">
+                            Uses Replicate's hosted MusicGen model to generate music on-demand.
+                            Requires REPLICATE_API_TOKEN and REPLICATE_MUSICGEN_VERSION settings.
+                            Fast, scalable cloud inference with pay-per-use pricing.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   ) : selectedEngineName === 'musicgen' ? (
                     <div className="mt-2 p-3 bg-purple-900/20 border border-purple-700/50 rounded text-xs">
                       <div className="flex items-start gap-2">
