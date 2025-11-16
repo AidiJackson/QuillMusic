@@ -16,6 +16,7 @@ import type {
   InstrumentalSourceType,
   InstrumentalEngineType,
   InstrumentalQuality,
+  InstrumentalEngineInfo,
 } from '@/types'
 
 export default function InstrumentalStudio() {
@@ -27,7 +28,8 @@ export default function InstrumentalStudio() {
   const [selectedSource, setSelectedSource] = useState<SongBlueprintResponse | ManualProject | null>(null)
 
   // Render settings
-  const [engineType, setEngineType] = useState<InstrumentalEngineType>('fake')
+  const [availableEngines, setAvailableEngines] = useState<InstrumentalEngineInfo[]>([])
+  const [selectedEngineName, setSelectedEngineName] = useState<string>('fake')
   const [durationSeconds, setDurationSeconds] = useState<string>('')
   const [styleHint, setStyleHint] = useState<string>('')
   const [quality, setQuality] = useState<InstrumentalQuality>('standard')
@@ -36,6 +38,11 @@ export default function InstrumentalStudio() {
   const [currentJob, setCurrentJob] = useState<InstrumentalRenderStatus | null>(null)
   const [isRendering, setIsRendering] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Load config on mount to get available engines
+  useEffect(() => {
+    loadConfig()
+  }, [])
 
   // Load sources on mount and when source type changes
   useEffect(() => {
@@ -52,6 +59,21 @@ export default function InstrumentalStudio() {
       loadSourceDetails()
     }
   }, [selectedSourceId, sourceType])
+
+  const loadConfig = async () => {
+    try {
+      const config = await apiClient.getConfig()
+      const engines = config.features.instrumental_engines || []
+      setAvailableEngines(engines)
+
+      // Set default engine to first available
+      if (engines.length > 0) {
+        setSelectedEngineName(engines[0].name)
+      }
+    } catch (error) {
+      console.error('Failed to load config:', error)
+    }
+  }
 
   const loadBlueprints = async () => {
     try {
@@ -101,10 +123,15 @@ export default function InstrumentalStudio() {
     setError(null)
 
     try {
+      // Find the selected engine info
+      const selectedEngine = availableEngines.find(e => e.name === selectedEngineName)
+      const engineType = (selectedEngine?.engine_type || 'fake') as InstrumentalEngineType
+
       const request: InstrumentalRenderRequest = {
         source_type: sourceType,
         source_id: selectedSourceId,
         engine_type: engineType,
+        model: selectedEngineName,  // Pass engine name as model parameter
         duration_seconds: durationSeconds ? parseInt(durationSeconds) : null,
         style_hint: styleHint || null,
         quality,
@@ -249,34 +276,46 @@ export default function InstrumentalStudio() {
                 <CardDescription>Configure your instrumental render</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Engine Type */}
+                {/* Engine Selection */}
                 <div>
-                  <Label htmlFor="engine">Engine Type</Label>
-                  <Select value={engineType} onValueChange={(v) => setEngineType(v as InstrumentalEngineType)}>
+                  <Label htmlFor="engine">Audio Engine</Label>
+                  <Select value={selectedEngineName} onValueChange={setSelectedEngineName}>
                     <SelectTrigger id="engine" className="bg-gray-800 border-gray-700">
-                      <SelectValue />
+                      <SelectValue placeholder="Select engine..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="fake">Fake Demo Engine</SelectItem>
-                      <SelectItem value="external_http">
-                        External Real Audio (API)
-                      </SelectItem>
+                      {availableEngines.map(engine => (
+                        <SelectItem key={engine.name} value={engine.name} disabled={!engine.available}>
+                          {engine.label} {!engine.available && '(Not Configured)'}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                  {engineType === 'fake' ? (
+                  {selectedEngineName === 'fake' ? (
                     <p className="text-xs text-gray-500 mt-1">
                       Demo engine generates fake audio URLs for testing
                     </p>
+                  ) : selectedEngineName === 'stable_audio_api' ? (
+                    <div className="mt-2 p-3 bg-purple-900/20 border border-purple-700/50 rounded text-xs">
+                      <div className="flex items-start gap-2">
+                        <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-purple-400" />
+                        <div className="text-purple-200">
+                          <strong className="block mb-1">Stable Audio Hosted API</strong>
+                          <p className="text-purple-300/80">
+                            Uses the official Stable Audio API to generate high-quality music.
+                            Requires STABLE_AUDIO_API_BASE_URL and STABLE_AUDIO_API_KEY settings.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   ) : (
                     <div className="mt-2 p-3 bg-purple-900/20 border border-purple-700/50 rounded text-xs">
                       <div className="flex items-start gap-2">
                         <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-purple-400" />
                         <div className="text-purple-200">
-                          <strong className="block mb-1">External Audio Provider</strong>
+                          <strong className="block mb-1">External Audio Engine</strong>
                           <p className="text-purple-300/80">
-                            This uses a real audio generation API if configured on the server.
-                            Requires AUDIO_PROVIDER, AUDIO_API_BASE_URL, and AUDIO_API_KEY settings.
-                            If not configured, the job will fail with a configuration error.
+                            Uses a real audio generation API. Configuration must be set on the server.
                           </p>
                         </div>
                       </div>

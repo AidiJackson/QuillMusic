@@ -197,6 +197,93 @@ The Manual Creator will provide a full DAW interface for:
 - Automation
 - Collaboration
 
+## ⚙️ Configuration
+
+### Instrumental Audio Engines
+
+QuillMusic supports multiple instrumental audio engines for generating music. The available engines are configured via environment variables.
+
+#### Available Engines
+
+1. **Fake Demo Engine (Default)**
+   - No configuration required
+   - Generates fake audio URLs for development and testing
+   - Always available
+
+2. **Stable Audio Hosted API** (Recommended for Quick Start)
+   - Official Stable Audio API - paid but cheap
+   - Generates real, high-quality music without self-hosting
+   - Requires API key from [Stability AI](https://stability.ai/)
+
+3. **Stable Audio Open** (Self-Hosted)
+   - Open-source Stable Audio model
+   - Requires self-hosting the inference server
+   - Free but requires GPU infrastructure
+
+4. **MusicGen** (Self-Hosted)
+   - Meta's MusicGen model
+   - Requires self-hosting the inference server
+   - Free but requires GPU infrastructure
+
+#### Configuring Stable Audio Hosted API
+
+To use the official Stable Audio API for quick, real music generation:
+
+1. **Get API Credentials**
+   - Sign up at [Stability AI](https://stability.ai/)
+   - Navigate to API settings
+   - Generate an API key
+
+2. **Set Environment Variables**
+
+   Create a `.env` file in `quillmusic/backend/` with:
+
+   ```bash
+   # Enable Stable Audio API
+   QUILLMUSIC_INSTRUMENTAL_ENGINES=stable_audio_api
+   QUILLMUSIC_DEFAULT_INSTRUMENTAL_MODEL=stable_audio_api
+
+   # Stable Audio API Configuration
+   QUILLMUSIC_STABLE_AUDIO_API_BASE_URL=https://api.stableaudio.com
+   QUILLMUSIC_STABLE_AUDIO_API_KEY=sk-your-api-key-here
+   QUILLMUSIC_STABLE_AUDIO_API_MODEL=stable-audio-1.0
+   ```
+
+3. **Use in Instrumental Studio**
+   - Navigate to **Instrumental Studio**
+   - Select **"Stable Audio (Hosted API)"** from the engine dropdown
+   - Choose a blueprint or manual project
+   - Click **Render Instrumental**
+
+   The system will call the Stable Audio API and return a real audio URL.
+
+#### Configuring Multiple Engines
+
+You can enable multiple engines simultaneously:
+
+```bash
+# Enable multiple engines (comma-separated)
+QUILLMUSIC_INSTRUMENTAL_ENGINES=fake,stable_audio_api,musicgen
+
+# Stable Audio API
+QUILLMUSIC_STABLE_AUDIO_API_BASE_URL=https://api.stableaudio.com
+QUILLMUSIC_STABLE_AUDIO_API_KEY=sk-your-api-key
+
+# MusicGen (self-hosted)
+QUILLMUSIC_MUSICGEN_BASE_URL=http://localhost:8001
+QUILLMUSIC_MUSICGEN_API_KEY=optional-key
+QUILLMUSIC_MUSICGEN_MODEL=musicgen-medium
+```
+
+All configured engines will appear in the Instrumental Studio engine dropdown.
+
+#### Notes
+
+- If no engine environment variables are set, only the **Fake Demo Engine** will be available
+- The **Stable Audio API** requires a paid account but is the easiest way to generate real music
+- Self-hosted engines require significant GPU resources (see [MUSIC_MODELS.md](./docs/MUSIC_MODELS.md))
+- API costs vary by provider - check [Stability AI pricing](https://stability.ai/pricing)
+
 ## 🧪 Testing
 
 ### Backend Tests

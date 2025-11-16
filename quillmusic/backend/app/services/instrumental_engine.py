@@ -2,9 +2,12 @@
 Instrumental engine abstraction for rendering audio from blueprints and manual projects
 """
 from abc import ABC, abstractmethod
-from typing import Tuple
+from typing import Tuple, Optional
 import logging
 import httpx
+import asyncio
+
+from app.core.config import InstrumentalEngineConfig
 
 logger = logging.getLogger(__name__)
 
@@ -115,17 +118,16 @@ class FakeInstrumentalEngine(BaseInstrumentalEngine):
 class ExternalInstrumentalEngine(BaseInstrumentalEngine):
     """External HTTP-based instrumental engine for real audio generation."""
 
-    def __init__(self, base_url: str, api_key: str):
+    def __init__(self, engine_config: InstrumentalEngineConfig):
         """
         Initialize external instrumental engine.
 
         Args:
-            base_url: Base URL for the audio generation API
-            api_key: API key for authentication
+            engine_config: Engine configuration with base_url, api_key, model, and name
         """
-        self.base_url = base_url.rstrip("/")
-        self.api_key = api_key
-        logger.info(f"ExternalInstrumentalEngine initialized with base_url: {self.base_url}")
+        self.engine_config = engine_config
+        self.engine_name = engine_config.name
+        logger.info(f"ExternalInstrumentalEngine initialized: {self.engine_name} ({engine_config.base_url})")
 
     def _build_prompt_from_blueprint(self, blueprint) -> str:
         """
@@ -239,6 +241,12 @@ class ExternalInstrumentalEngine(BaseInstrumentalEngine):
         """
         Make HTTP request to external audio generation API.
 
+        Routes to the appropriate client based on engine name:
+        - stable_audio_api: Official Stable Audio hosted API
+        - stable_audio_open: Self-hosted Stable Audio Open
+        - musicgen: Self-hosted MusicGen
+        - Others: Generic HTTP endpoint
+
         Args:
             prompt: Text prompt for audio generation
             duration_seconds: Desired duration in seconds
@@ -249,22 +257,72 @@ class ExternalInstrumentalEngine(BaseInstrumentalEngine):
         Raises:
             ExternalAudioError: If API request fails or returns invalid response
         """
+        # Route to specific client based on engine name
+        if self.engine_name == "stable_audio_api":
+            # Use dedicated Stable Audio API client
+            from app.providers.stable_audio_api import generate_stable_audio, StableAudioAPIError
+            try:
+                # Run async function in sync context
+                audio_url = asyncio.run(generate_stable_audio(
+                    engine_config=self.engine_config,
+                    prompt=prompt,
+                    duration_seconds=duration_seconds,
+                ))
+                return (audio_url, duration_seconds)
+            except StableAudioAPIError as exc:
+                logger.error(f"Stable Audio API error: {exc}")
+                raise ExternalAudioError(f"Stable Audio API request failed: {exc}") from exc
+
+        # For other engines (stable_audio_open, musicgen), use generic HTTP client
+        # This maintains backward compatibility with existing external engines
+        else:
+            return self._generic_http_generate(prompt, duration_seconds)
+
+    def _generic_http_generate(self, prompt: str, duration_seconds: int) -> Tuple[str, int]:
+        """
+        Generic HTTP client for external audio generation APIs.
+
+        This method provides a generic implementation for external engines
+        that follow a similar HTTP interface pattern.
+
+        Args:
+            prompt: Text prompt for audio generation
+            duration_seconds: Desired duration in seconds
+
+        Returns:
+            Tuple of (audio_url, duration_seconds)
+
+        Raises:
+            ExternalAudioError: If API request fails or returns invalid response
+        """
+        if not self.engine_config.base_url:
+            raise ExternalAudioError(f"Engine {self.engine_name} missing base_url configuration")
+
         try:
-            logger.info(f"Calling external audio API: {self.base_url}/v2/generate/audio")
-            logger.info(f"Prompt: {prompt}, Duration: {duration_seconds}s")
+            base_url = self.engine_config.base_url.rstrip("/")
+            url = f"{base_url}/v2/generate/audio"
+            model = self.engine_config.model or "default-model"
+
+            logger.info(f"Calling external audio API ({self.engine_name}): {url}")
+            logger.info(f"Model: {model}, Prompt: {prompt}, Duration: {duration_seconds}s")
+
+            headers = {
+                "Content-Type": "application/json",
+            }
+
+            # Add authorization if API key is configured
+            if self.engine_config.api_key:
+                headers["Authorization"] = f"Bearer {self.engine_config.api_key}"
 
             response = httpx.post(
-                f"{self.base_url}/v2/generate/audio",
-                headers={
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json",
-                },
+                url,
+                headers=headers,
                 json={
-                    "model": "music-gen-v1",
+                    "model": model,
                     "prompt": prompt,
                     "seconds_total": duration_seconds,
                 },
-                timeout=60.0,
+                timeout=120.0,
             )
 
             if response.status_code != 200:
@@ -369,19 +427,24 @@ class HttpInstrumentalEngine(BaseInstrumentalEngine):
         return self._fake_engine.render_from_manual_project(project, tracks, patterns)
 
 
-def get_instrumental_engine(engine_type: str, settings=None) -> BaseInstrumentalEngine:
+def get_instrumental_engine(
+    engine_type: str,
+    model: Optional[str] = None,
+    settings=None
+) -> BaseInstrumentalEngine:
     """
     Factory function to get the appropriate instrumental engine.
 
     Args:
         engine_type: "fake" or "external_http"
-        settings: Settings object (optional, required for external_http)
+        model: Engine name/model identifier (e.g., "stable_audio_api", "musicgen")
+        settings: Settings object (optional)
 
     Returns:
         BaseInstrumentalEngine instance
 
     Raises:
-        ConfigurationError: If external_http is requested but settings are invalid
+        ConfigurationError: If external_http is requested but configuration is invalid
     """
     if engine_type == "fake":
         return FakeInstrumentalEngine()
@@ -391,27 +454,33 @@ def get_instrumental_engine(engine_type: str, settings=None) -> BaseInstrumental
             from app.core.config import settings as default_settings
             settings = default_settings
 
-        # Validate configuration for external audio provider
-        if settings.AUDIO_PROVIDER != "stable_audio_http":
+        # Determine which engine to use based on model parameter
+        # Model should be the engine name (e.g., "stable_audio_api", "musicgen")
+        engine_name = model or "stable_audio_api"
+
+        # Get engine configuration
+        engine_config = settings.get_engine_config(engine_name)
+
+        if engine_config is None:
             raise ConfigurationError(
-                f"External audio provider not configured (AUDIO_PROVIDER='{settings.AUDIO_PROVIDER}', expected 'stable_audio_http')"
+                f"Engine '{engine_name}' is not configured. "
+                f"Available engines: {[e.name for e in settings.instrumental_engines]}"
             )
 
-        if not settings.AUDIO_API_BASE_URL:
+        if engine_config.engine_type != "external_http":
             raise ConfigurationError(
-                "External audio provider missing AUDIO_API_BASE_URL configuration"
+                f"Engine '{engine_name}' is configured as '{engine_config.engine_type}', "
+                f"but 'external_http' was requested"
             )
 
-        if not settings.AUDIO_API_KEY:
+        # Validate that base_url is configured for external engines
+        if not engine_config.base_url:
             raise ConfigurationError(
-                "External audio provider missing AUDIO_API_KEY configuration"
+                f"Engine '{engine_name}' is missing base_url configuration"
             )
 
-        # Create external engine with validated settings
-        return ExternalInstrumentalEngine(
-            base_url=settings.AUDIO_API_BASE_URL,
-            api_key=settings.AUDIO_API_KEY,
-        )
+        # Create external engine with configuration
+        return ExternalInstrumentalEngine(engine_config=engine_config)
     else:
         logger.warning(f"Unknown engine type '{engine_type}', defaulting to fake")
         return FakeInstrumentalEngine()
