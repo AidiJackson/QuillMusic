@@ -243,6 +243,7 @@ class ExternalInstrumentalEngine(BaseInstrumentalEngine):
 
         Routes to the appropriate client based on engine name:
         - stable_audio_api: Official Stable Audio hosted API
+        - replicate_musicgen: Replicate hosted MusicGen API
         - stable_audio_open: Self-hosted Stable Audio Open
         - musicgen: Self-hosted MusicGen
         - Others: Generic HTTP endpoint
@@ -272,6 +273,22 @@ class ExternalInstrumentalEngine(BaseInstrumentalEngine):
             except StableAudioAPIError as exc:
                 logger.error(f"Stable Audio API error: {exc}")
                 raise ExternalAudioError(f"Stable Audio API request failed: {exc}") from exc
+
+        elif self.engine_name == "replicate_musicgen":
+            # Use dedicated Replicate MusicGen client
+            from app.providers.replicate_musicgen import ReplicateMusicGenClient, ReplicateMusicGenError
+            from app.core.config import settings
+            try:
+                client = ReplicateMusicGenClient(settings=settings)
+                # Run async function in sync context
+                audio_url = asyncio.run(client.generate_audio(
+                    prompt=prompt,
+                    duration_seconds=duration_seconds,
+                ))
+                return (audio_url, duration_seconds)
+            except ReplicateMusicGenError as exc:
+                logger.error(f"Replicate MusicGen error: {exc}")
+                raise ExternalAudioError(f"Replicate MusicGen request failed: {exc}") from exc
 
         # For other engines (stable_audio_open, musicgen), use generic HTTP client
         # This maintains backward compatibility with existing external engines
@@ -442,26 +459,26 @@ def get_instrumental_engine(
     Factory function to get the appropriate instrumental engine.
 
     Args:
-        engine_type: "fake" or "external_http"
-        model: Engine name/model identifier (e.g., "stable_audio_api", "musicgen")
+        engine_type: "fake", "external_http", or "replicate_musicgen"
+        model: Engine name/model identifier (e.g., "stable_audio_api", "musicgen", "replicate_musicgen")
         settings: Settings object (optional)
 
     Returns:
         BaseInstrumentalEngine instance
 
     Raises:
-        ConfigurationError: If external_http is requested but configuration is invalid
+        ConfigurationError: If external_http or replicate_musicgen is requested but configuration is invalid
     """
     if engine_type == "fake":
         return FakeInstrumentalEngine()
-    elif engine_type == "external_http":
+    elif engine_type in ["external_http", "replicate_musicgen"]:
         # Check if settings are provided
         if settings is None:
             from app.core.config import settings as default_settings
             settings = default_settings
 
         # Determine which engine to use based on model parameter
-        # Model should be the engine name (e.g., "stable_audio_api", "musicgen")
+        # Model should be the engine name (e.g., "stable_audio_api", "musicgen", "replicate_musicgen")
         engine_name = model or "stable_audio_api"
 
         # Get engine configuration
@@ -473,10 +490,12 @@ def get_instrumental_engine(
                 f"Available engines: {[e.name for e in settings.instrumental_engines]}"
             )
 
-        if engine_config.engine_type != "external_http":
+        # Validate engine type matches (allow both external_http and replicate_musicgen)
+        valid_types = ["external_http", "replicate_musicgen"]
+        if engine_config.engine_type not in valid_types:
             raise ConfigurationError(
                 f"Engine '{engine_name}' is configured as '{engine_config.engine_type}', "
-                f"but 'external_http' was requested"
+                f"but '{engine_type}' was requested"
             )
 
         # Validate that base_url is configured for external engines
