@@ -308,6 +308,19 @@ export default function InstrumentalStudio() {
                         </div>
                       </div>
                     </div>
+                  ) : selectedEngineName === 'musicgen' ? (
+                    <div className="mt-2 p-3 bg-purple-900/20 border border-purple-700/50 rounded text-xs">
+                      <div className="flex items-start gap-2">
+                        <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-purple-400" />
+                        <div className="text-purple-200">
+                          <strong className="block mb-1">MusicGen (Meta, Free)</strong>
+                          <p className="text-purple-300/80">
+                            Uses a self-hosted MusicGen server to generate free, high-quality instrumentals.
+                            Requires MUSICGEN_BASE_URL pointing to your MusicGen HTTP service.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   ) : (
                     <div className="mt-2 p-3 bg-purple-900/20 border border-purple-700/50 rounded text-xs">
                       <div className="flex items-start gap-2">

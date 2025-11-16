@@ -257,6 +257,66 @@ To use the official Stable Audio API for quick, real music generation:
 
    The system will call the Stable Audio API and return a real audio URL.
 
+#### Configuring MusicGen (Meta, Free)
+
+To use a self-hosted MusicGen server for free, high-quality instrumental generation:
+
+1. **Deploy MusicGen HTTP Service**
+
+   MusicGen must be exposed as an HTTP service with the following interface:
+
+   **Endpoint:** `POST {BASE_URL}/v1/generate/audio`
+
+   **Request Body (JSON):**
+   ```json
+   {
+     "model": "facebook/musicgen-medium",
+     "prompt": "energetic pop track with synths and drums",
+     "seconds_total": 30
+   }
+   ```
+
+   **Response Body (JSON):**
+   ```json
+   {
+     "status": "ready",
+     "audio_url": "https://your-cdn.com/generated-audio.wav"
+   }
+   ```
+
+   **Deployment Options:**
+   - **RunPod**: Deploy MusicGen on RunPod serverless GPU
+   - **Hugging Face Spaces**: Deploy as an API endpoint
+   - **Self-hosted**: Run on your own GPU infrastructure
+   - **Modal/Replicate**: Use serverless platforms
+
+2. **Set Environment Variables**
+
+   Create a `.env` file in `quillmusic/backend/` with:
+
+   ```bash
+   # Enable MusicGen engine
+   QUILLMUSIC_INSTRUMENTAL_ENGINES=fake,musicgen
+   QUILLMUSIC_DEFAULT_INSTRUMENTAL_MODEL=musicgen
+
+   # MusicGen Configuration
+   QUILLMUSIC_MUSICGEN_BASE_URL=https://your-musicgen-server.example.com
+   QUILLMUSIC_MUSICGEN_MODEL=facebook/musicgen-medium
+   ```
+
+   **Notes:**
+   - No API key required for self-hosted MusicGen
+   - Model options: `facebook/musicgen-small`, `facebook/musicgen-medium`, `facebook/musicgen-large`
+   - Ensure your MusicGen service returns publicly accessible audio URLs
+
+3. **Use in Instrumental Studio**
+   - Navigate to **Instrumental Studio**
+   - Select **"MusicGen (Meta, Free)"** from the engine dropdown
+   - Choose a blueprint or manual project
+   - Click **Render Instrumental**
+
+   The system will call your MusicGen HTTP service and retrieve the generated audio.
+
 #### Configuring Multiple Engines
 
 You can enable multiple engines simultaneously:

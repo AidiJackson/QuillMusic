@@ -300,7 +300,13 @@ class ExternalInstrumentalEngine(BaseInstrumentalEngine):
 
         try:
             base_url = self.engine_config.base_url.rstrip("/")
-            url = f"{base_url}/v2/generate/audio"
+
+            # Use appropriate endpoint path based on engine
+            if self.engine_name == "musicgen":
+                url = f"{base_url}/v1/generate/audio"
+            else:
+                url = f"{base_url}/v2/generate/audio"
+
             model = self.engine_config.model or "default-model"
 
             logger.info(f"Calling external audio API ({self.engine_name}): {url}")
