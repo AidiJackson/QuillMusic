@@ -15,6 +15,7 @@ class InstrumentalJobModel(Base):
     id = Column(String, primary_key=True, index=True)
     status = Column(String(20), nullable=False, default="queued")  # queued, processing, ready, failed
     engine_type = Column(String(50), nullable=False, default="fake")
+    model = Column(String(100), nullable=True)  # AI model name (e.g., "Stable Audio 2.0")
     source_type = Column(String(20), nullable=False)  # blueprint, manual_project
     source_id = Column(String, nullable=False, index=True)
     duration_seconds = Column(Integer, nullable=True)

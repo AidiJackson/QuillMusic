@@ -54,6 +54,7 @@ def create_instrumental_job(
             id=job_id,
             status="processing",
             engine_type=request.engine_type,
+            model=request.model,
             source_type=request.source_type,
             source_id=request.source_id,
         )
@@ -210,6 +211,7 @@ def _job_model_to_status(job: InstrumentalJobModel) -> InstrumentalRenderStatus:
         id=job.id,
         status=job.status,
         engine_type=job.engine_type,
+        model=job.model,
         source_type=job.source_type,
         source_id=job.source_id,
         duration_seconds=job.duration_seconds,
