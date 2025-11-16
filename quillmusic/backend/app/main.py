@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.core.database import init_db
-from app.api.routes import health, song_blueprints, renders, manual, instrumental, hitmaker
+from app.api.routes import health, song_blueprints, renders, manual, instrumental, hitmaker, config
 
 
 def create_app() -> FastAPI:
@@ -35,6 +35,7 @@ def create_app() -> FastAPI:
 
     # Include routers
     app.include_router(health.router, prefix=settings.API_PREFIX, tags=["health"])
+    app.include_router(config.router, prefix=settings.API_PREFIX, tags=["config"])
     app.include_router(
         song_blueprints.router, prefix=settings.API_PREFIX, tags=["songs"]
     )
