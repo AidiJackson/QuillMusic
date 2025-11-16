@@ -1,8 +1,11 @@
 """
 QuillMusic Backend - FastAPI Application
 """
+import os
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.core.database import init_db
@@ -20,7 +23,8 @@ def create_app() -> FastAPI:
     # Configure CORS
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.CORS_ORIGINS,
+        allow_origin_regex=r"https://.*\.(replit\.dev|repl\.co)",
+        allow_origins=["http://localhost:5000", "http://localhost:5173", "http://localhost:3000", "http://localhost:8000"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -39,14 +43,19 @@ def create_app() -> FastAPI:
     app.include_router(instrumental.router, prefix=settings.API_PREFIX, tags=["instrumental"])
     app.include_router(hitmaker.router, prefix=f"{settings.API_PREFIX}/hitmaker", tags=["hitmaker"])
 
-    @app.get("/")
-    async def root():
-        """Root endpoint."""
-        return {
-            "service": settings.APP_NAME,
-            "version": settings.APP_VERSION,
-            "status": "running",
-        }
+    # Serve static frontend files in production
+    frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"
+    if frontend_dist.exists() and frontend_dist.is_dir():
+        app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="frontend")
+    else:
+        @app.get("/")
+        async def root():
+            """Root endpoint."""
+            return {
+                "service": settings.APP_NAME,
+                "version": settings.APP_VERSION,
+                "status": "running",
+            }
 
     return app
 

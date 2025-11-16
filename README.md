@@ -67,7 +67,14 @@ QuillMusic/
 - **Python 3.11+** (for backend)
 - **Node.js 18+** (for frontend)
 
-### Unified Dev Experience (Recommended)
+### Unified Dev Experience
+
+**Choose your development environment:**
+
+#### On Replit
+Just click the **Run** button! The project uses Replit workflows that automatically start both backend and frontend. See [replit.md](./replit.md) for details.
+
+#### Local Development (Recommended)
 
 **One command to run everything:**
 
@@ -92,6 +99,8 @@ npm run dev
 The unified `npm run dev` command starts both servers simultaneously with colored output:
 - **Backend** (blue): FastAPI server on port 8000
 - **Frontend** (green): Vite dev server on port 5173
+
+**Note:** The frontend uses Vite proxy to forward `/api` requests to the backend at localhost:8000.
 
 ### Alternative: Manual Setup (Legacy)
 
