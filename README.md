@@ -66,23 +66,46 @@ QuillMusic/
 
 - **Python 3.11+** (for backend)
 - **Node.js 18+** (for frontend)
-- **Docker & Docker Compose** (optional, recommended)
 
-### Option 1: Docker Compose (Recommended)
+### Unified Dev Experience
+
+**Choose your development environment:**
+
+#### On Replit
+Just click the **Run** button! The project uses Replit workflows that automatically start both backend and frontend. See [replit.md](./replit.md) for details.
+
+#### Local Development (Recommended)
+
+**One command to run everything:**
 
 ```bash
 # Clone the repository
 git clone https://github.com/AidiJackson/QuillMusic.git
 cd QuillMusic
 
-# Start services (Redis + Backend)
-docker-compose up -d
+# Install dependencies (first time only)
+npm install                                    # Root dev runner
+cd quillmusic/backend && pip install -r requirements.txt && cd ../..
+cd quillmusic/frontend && npm install && cd ../..
 
-# The API will be available at http://localhost:8000
-# API documentation at http://localhost:8000/docs
+# Start both backend AND frontend together
+npm run dev
+
+# That's it! 🎉
+# Backend: http://localhost:8000 (API docs: http://localhost:8000/docs)
+# Frontend: http://localhost:5173
 ```
 
-### Option 2: Manual Setup
+The unified `npm run dev` command starts both servers simultaneously with colored output:
+- **Backend** (blue): FastAPI server on port 8000
+- **Frontend** (green): Vite dev server on port 5173
+
+**Note:** The frontend uses Vite proxy to forward `/api` requests to the backend at localhost:8000.
+
+### Alternative: Manual Setup (Legacy)
+
+<details>
+<summary>Click to expand manual setup instructions</summary>
 
 #### Backend
 
@@ -90,21 +113,14 @@ docker-compose up -d
 # Navigate to backend
 cd quillmusic/backend
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
 # Install dependencies
 pip install -r requirements.txt
 
-# Start Redis (in separate terminal)
-redis-server
-
 # Run the backend
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --port 8000
 
 # Run tests
-pytest
+python -m pytest
 ```
 
 #### Frontend
@@ -120,6 +136,18 @@ npm install
 npm run dev
 
 # The frontend will be available at http://localhost:5173
+```
+
+</details>
+
+### Using Docker Compose
+
+```bash
+# Start services (Redis + Backend)
+docker-compose up -d
+
+# The API will be available at http://localhost:8000
+# API documentation at http://localhost:8000/docs
 ```
 
 ## 🎨 Usage
@@ -162,13 +190,18 @@ The Manual Creator will provide a full DAW interface for:
 
 ```bash
 cd quillmusic/backend
-pytest
+python -m pytest
 
 # With coverage
-pytest --cov=app --cov-report=html
+python -m pytest --cov=app --cov-report=html
 
 # Run specific test file
-pytest tests/test_song_blueprints.py
+python -m pytest tests/test_song_blueprints.py
+```
+
+**Or run from root:**
+```bash
+npm run test:backend
 ```
 
 ### Frontend Build
@@ -180,6 +213,20 @@ npm run build
 # Preview production build
 npm run preview
 ```
+
+**Or build from root:**
+```bash
+npm run build:frontend
+```
+
+### Available Root Scripts
+
+From the project root, you can run:
+- `npm run dev` - Start both backend and frontend (unified dev experience)
+- `npm run test:backend` - Run backend tests
+- `npm run test:frontend` - Build frontend (validates TypeScript)
+- `npm run build:frontend` - Build frontend for production
+- `npm run install:all` - Install all dependencies (backend + frontend)
 
 ## 📚 Documentation
 
