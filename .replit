@@ -7,61 +7,13 @@ expertMode = true
 channel = "stable-25_05"
 packages = ["redis"]
 
-# When you click the big Run button, run the "Project" workflow
-[workflows]
-runButton = "Project"
+# Single command to run both backend + frontend via root package.json
+run = "npm run dev"
+entrypoint = "README.md"
 
-# -----------------------------
-# Project workflow: start backend + frontend in parallel
-# -----------------------------
-[[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-# Start the backend (FastAPI + Redis) – console output
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Backend"
-
-# Start the frontend (Vite/React) – webview output
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Frontend"
-
-# -----------------------------
-# Backend workflow
-# -----------------------------
-[[workflows.workflow]]
-name = "Backend"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-# This script was created by the Replit Agent and runs:
-#   redis-server --daemonize yes
-#   cd quillmusic/backend
-#   uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-args = "bash start-backend.sh"
-waitForPort = 8000
-
-[workflows.workflow.metadata]
-outputType = "console"
-
-# -----------------------------
-# Frontend workflow
-# -----------------------------
-[[workflows.workflow]]
-name = "Frontend"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd quillmusic/frontend && npm run dev"
-waitForPort = 5000
-
-[workflows.workflow.metadata]
-outputType = "webview"
+# Environment variables for development
+[env]
+QUILLMUSIC_DEBUG = "true"
 
 # -----------------------------
 # Port mappings
