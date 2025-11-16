@@ -69,12 +69,21 @@ QuillMusic/
 
 ### Unified Dev Experience
 
-**Choose your development environment:**
+**One command runs everything!**
 
-#### On Replit
-Just click the **Run** button! The project uses Replit workflows that automatically start both backend and frontend. See [replit.md](./replit.md) for details.
+#### On Replit (Easiest!)
 
-#### Local Development (Recommended)
+Just click the **Run** button!
+
+The `.replit` configuration automatically:
+- Starts Redis in daemon mode
+- Starts the FastAPI backend on port 8000
+- Starts the Vite frontend dev server on port 5000
+- The Replit preview shows the React UI
+
+**Development branch:** `claude/unified-dev-runner-013TKA1cg1SCS1zm96jZrfGm`
+
+#### Local Development
 
 **One command to run everything:**
 
@@ -83,24 +92,28 @@ Just click the **Run** button! The project uses Replit workflows that automatica
 git clone https://github.com/AidiJackson/QuillMusic.git
 cd QuillMusic
 
+# Checkout the development branch
+git checkout claude/unified-dev-runner-013TKA1cg1SCS1zm96jZrfGm
+
 # Install dependencies (first time only)
-npm install                                    # Root dev runner
+npm install                                      # Root dev runner (concurrently)
 cd quillmusic/backend && pip install -r requirements.txt && cd ../..
 cd quillmusic/frontend && npm install && cd ../..
 
-# Start both backend AND frontend together
+# Start everything together
 npm run dev
 
 # That's it! 🎉
 # Backend: http://localhost:8000 (API docs: http://localhost:8000/docs)
-# Frontend: http://localhost:5173
+# Frontend: http://localhost:5000
 ```
 
-The unified `npm run dev` command starts both servers simultaneously with colored output:
-- **Backend** (blue): FastAPI server on port 8000
-- **Frontend** (green): Vite dev server on port 5173
-
-**Note:** The frontend uses Vite proxy to forward `/api` requests to the backend at localhost:8000.
+The unified `npm run dev` command automatically:
+- ✅ Starts Redis server in daemon mode
+- ✅ Starts FastAPI backend on port 8000 with auto-reload
+- ✅ Starts Vite frontend dev server on port 5000
+- ✅ Colored output (blue for backend, green for frontend)
+- ✅ Vite proxy forwards `/api` requests to the backend seamlessly
 
 ### Alternative: Manual Setup (Legacy)
 
