@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Music, Home, Sparkles, List, Settings, Sliders, Radio, TrendingUp } from 'lucide-react'
+import { Music, Home, Sparkles, List, Settings, Sliders, Radio, Mic2, TrendingUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -8,6 +8,7 @@ const navItems = [
   { path: '/render-queue', label: 'Render Queue', icon: List },
   { path: '/manual-creator', label: 'Manual Creator', icon: Sliders },
   { path: '/instrumental-studio', label: 'Instrumental Studio', icon: Radio },
+  { path: '/vocal-studio', label: 'Vocal Studio', icon: Mic2 },
   { path: '/hitmaker-studio', label: 'HitMaker Studio', icon: TrendingUp },
 ]
 

@@ -76,6 +76,12 @@ class Settings(BaseSettings):
     MUSICGEN_API_KEY: Optional[str] = None
     MUSICGEN_MODEL: str = "musicgen-medium"
 
+    # ElevenLabs TTS Configuration (vocal synthesis)
+    ELEVENLABS_API_KEY: Optional[str] = None
+    ELEVENLABS_BASE_URL: str = "https://api.elevenlabs.io"
+    ELEVENLABS_DEFAULT_MODEL: str = "eleven_turbo_v2_5"
+    ELEVENLABS_DEFAULT_VOICE_ID: Optional[str] = None
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

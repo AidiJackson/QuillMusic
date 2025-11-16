@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.core.database import init_db
-from app.api.routes import health, song_blueprints, renders, manual, instrumental, hitmaker, config
+from app.api.routes import health, song_blueprints, renders, manual, instrumental, hitmaker, config, vocals
 
 
 def create_app() -> FastAPI:
@@ -43,6 +43,7 @@ def create_app() -> FastAPI:
     app.include_router(manual.router, prefix=settings.API_PREFIX, tags=["manual"])
     app.include_router(instrumental.router, prefix=settings.API_PREFIX, tags=["instrumental"])
     app.include_router(hitmaker.router, prefix=f"{settings.API_PREFIX}/hitmaker", tags=["hitmaker"])
+    app.include_router(vocals.router, prefix=settings.API_PREFIX, tags=["vocals"])
 
     # Serve static frontend files in production
     frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"
