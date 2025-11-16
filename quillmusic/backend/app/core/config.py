@@ -2,7 +2,18 @@
 QuillMusic Backend Configuration
 """
 from typing import Optional, Literal
+from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class InstrumentalEngineConfig(BaseModel):
+    """Configuration for a single instrumental engine."""
+    name: str
+    label: str
+    engine_type: str  # "fake" or "external_http"
+    base_url: Optional[str] = None
+    api_key: Optional[str] = None
+    model: Optional[str] = None
 
 
 class Settings(BaseSettings):
@@ -41,10 +52,29 @@ class Settings(BaseSettings):
     LLM_MODEL_NAME: str = "gpt-4.1-mini"
     LLM_PROVIDER: str = "openai-compatible"
 
-    # Audio Provider Configuration (for instrumental rendering)
+    # Audio Provider Configuration (for instrumental rendering - legacy)
     AUDIO_PROVIDER: Optional[str] = "fake"
     AUDIO_API_BASE_URL: Optional[str] = None
     AUDIO_API_KEY: Optional[str] = None
+
+    # Instrumental Engine Configuration (multi-engine support)
+    INSTRUMENTAL_ENGINES: Optional[str] = None  # Comma-separated list of engine names
+    DEFAULT_INSTRUMENTAL_MODEL: Optional[str] = None
+
+    # Stable Audio API Configuration (hosted API)
+    STABLE_AUDIO_API_BASE_URL: Optional[str] = None
+    STABLE_AUDIO_API_KEY: Optional[str] = None
+    STABLE_AUDIO_API_MODEL: str = "stable-audio-1.0"
+
+    # Stable Audio Open Configuration (self-hosted)
+    STABLE_AUDIO_OPEN_BASE_URL: Optional[str] = None
+    STABLE_AUDIO_OPEN_API_KEY: Optional[str] = None
+    STABLE_AUDIO_OPEN_MODEL: str = "stable-audio-open-1.0"
+
+    # MusicGen Configuration (self-hosted)
+    MUSICGEN_BASE_URL: Optional[str] = None
+    MUSICGEN_API_KEY: Optional[str] = None
+    MUSICGEN_MODEL: str = "musicgen-medium"
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -52,6 +82,78 @@ class Settings(BaseSettings):
         case_sensitive=True,
         env_prefix="QUILLMUSIC_",
     )
+
+    @property
+    def instrumental_engines(self) -> list[InstrumentalEngineConfig]:
+        """
+        Build list of available instrumental engines based on configuration.
+
+        Returns:
+            List of configured instrumental engines
+        """
+        engines = []
+
+        # Always include fake engine for dev/test
+        engines.append(InstrumentalEngineConfig(
+            name="fake",
+            label="Fake Demo Engine (Dev/Test)",
+            engine_type="fake",
+        ))
+
+        # Add Stable Audio API if configured
+        if self.STABLE_AUDIO_API_BASE_URL:
+            engines.append(InstrumentalEngineConfig(
+                name="stable_audio_api",
+                label="Stable Audio (Hosted API)",
+                engine_type="external_http",
+                base_url=self.STABLE_AUDIO_API_BASE_URL,
+                api_key=self.STABLE_AUDIO_API_KEY,
+                model=self.STABLE_AUDIO_API_MODEL,
+            ))
+
+        # Add Stable Audio Open if configured
+        if self.STABLE_AUDIO_OPEN_BASE_URL:
+            engines.append(InstrumentalEngineConfig(
+                name="stable_audio_open",
+                label="Stable Audio Open (Self-Hosted)",
+                engine_type="external_http",
+                base_url=self.STABLE_AUDIO_OPEN_BASE_URL,
+                api_key=self.STABLE_AUDIO_OPEN_API_KEY,
+                model=self.STABLE_AUDIO_OPEN_MODEL,
+            ))
+
+        # Add MusicGen if configured
+        if self.MUSICGEN_BASE_URL:
+            engines.append(InstrumentalEngineConfig(
+                name="musicgen",
+                label="MusicGen (Self-Hosted)",
+                engine_type="external_http",
+                base_url=self.MUSICGEN_BASE_URL,
+                api_key=self.MUSICGEN_API_KEY,
+                model=self.MUSICGEN_MODEL,
+            ))
+
+        # Filter by INSTRUMENTAL_ENGINES if specified
+        if self.INSTRUMENTAL_ENGINES:
+            enabled_names = [name.strip() for name in self.INSTRUMENTAL_ENGINES.split(",")]
+            engines = [e for e in engines if e.name in enabled_names]
+
+        return engines
+
+    def get_engine_config(self, engine_name: str) -> Optional[InstrumentalEngineConfig]:
+        """
+        Get configuration for a specific engine by name.
+
+        Args:
+            engine_name: Name of the engine (e.g., "stable_audio_api")
+
+        Returns:
+            Engine configuration or None if not found
+        """
+        for engine in self.instrumental_engines:
+            if engine.name == engine_name:
+                return engine
+        return None
 
 
 settings = Settings()

@@ -147,7 +147,11 @@ def _render_instrumental(request: InstrumentalRenderRequest, db: Session) -> tup
     Returns:
         Tuple of (audio_url, duration_seconds)
     """
-    engine = get_instrumental_engine(request.engine_type, settings=settings)
+    engine = get_instrumental_engine(
+        engine_type=request.engine_type,
+        model=request.model,
+        settings=settings
+    )
 
     if request.source_type == "blueprint":
         # Load blueprint from database

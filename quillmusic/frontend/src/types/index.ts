@@ -195,6 +195,13 @@ export interface InstrumentalRenderStatus {
 
 // ========== Config & Feature Flags ==========
 
+export interface InstrumentalEngineInfo {
+  name: string
+  label: string
+  engine_type: string
+  available: boolean
+}
+
 export interface AudioProviderInfo {
   provider: string
   available: boolean
@@ -204,6 +211,7 @@ export interface AudioProviderInfo {
 export interface FeatureFlags {
   external_instrumental_available: boolean
   audio_provider: AudioProviderInfo
+  instrumental_engines: InstrumentalEngineInfo[]
 }
 
 export interface AppConfig {
