@@ -8,7 +8,7 @@ channel = "stable-25_05"
 packages = ["redis"]
 
 # Single command to run both backend + frontend via root package.json
-run = "npm run dev"
+run = "bash start-production.sh"
 entrypoint = "README.md"
 
 # Environment variables for development
